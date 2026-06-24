@@ -2,7 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { initUpdater, destroyUpdater } from './updater'
+import { initIncrementalUpdater } from './updater'
 
 function createWindow(): BrowserWindow {
   // Create the browser window.
@@ -43,7 +43,7 @@ function createWindow(): BrowserWindow {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
+  electronApp.setAppUserModelId('com.e-media.app')
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -55,10 +55,13 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
+  // 获取应用版本号
+  ipcMain.handle('app:get-version', () => app.getVersion())
+
   const mainWindow = createWindow()
 
-  // 初始化应用更新模块（提取自 electerm 的更新机制）
-  initUpdater(mainWindow)
+  // 初始化增量更新模块（基于 electron-updater，支持 blockmap 增量下载）
+  initIncrementalUpdater(mainWindow)
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
@@ -74,11 +77,6 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
-})
-
-// 应用退出前清理更新模块资源
-app.on('before-quit', () => {
-  destroyUpdater()
 })
 
 // In this file you can include the rest of your app's specific main process

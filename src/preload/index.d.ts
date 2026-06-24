@@ -1,25 +1,21 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 
-/** 更新检查结果 */
-interface UpdateCheckResult {
-  hasUpdate: boolean
-  currentVersion: string
-  latestVersion: string
-  date?: string
-  releaseNotes?: string
-  asset?: { name: string; browser_download_url: string }
+/** 更新信息 */
+interface UpdateInfo {
+  version: string
+  releaseDate: string
+  releaseNotes: string
 }
 
-/** 更新模块 API */
+/** 更新 API（基于 electron-updater，支持 blockmap 增量更新） */
 interface UpdaterAPI {
-  checkForUpdate: () => Promise<UpdateCheckResult>
-  downloadUpdate: (url: string, mirror: string) => Promise<boolean>
-  pauseDownload: () => Promise<boolean>
-  resumeDownload: () => Promise<boolean>
-  cancelDownload: () => Promise<boolean>
-  openFile: (filePath: string) => Promise<boolean>
+  checkForUpdate: () => Promise<boolean>
+  downloadUpdate: () => Promise<boolean>
+  installUpdate: () => Promise<boolean>
+  onUpdateAvailable: (callback: (info: UpdateInfo) => void) => () => void
+  onUpdateNotAvailable: (callback: (info: { version: string }) => void) => () => void
   onProgress: (callback: (percent: number) => void) => () => void
-  onDownloaded: (callback: (filePath: string) => void) => () => void
+  onDownloaded: (callback: () => void) => () => void
   onError: (callback: (message: string) => void) => () => void
 }
 
@@ -28,6 +24,7 @@ declare global {
     electron: ElectronAPI
     api: {
       updater: UpdaterAPI
+      getVersion: () => Promise<string>
     }
   }
 }

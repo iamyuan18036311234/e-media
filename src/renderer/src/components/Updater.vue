@@ -1,34 +1,26 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 
-const { updater } = window.api
+const { updater, getVersion } = window.api
+
+// 当前版本号
+const currentVersion = ref('')
 
 // 状态
 const checking = ref(false)
-const hasUpdate = ref(false)
-const updateInfo = ref<{
-  currentVersion: string
-  latestVersion: string
-  date?: string
-  releaseNotes?: string
-  asset?: { name: string; browser_download_url: string }
-} | null>(null)
-
-const downloading = ref(false)
-const paused = ref(false)
-const progress = ref(0)
 const error = ref('')
-const downloadedFilePath = ref('')
 const showPanel = ref(false)
 
-// 镜像选项 - 应与 main/updater/update-checker.ts 中的 mirrors 保持一致
-const mirrors = [
-  { value: 'direct', label: 'Direct' },
-  { value: 'mirror', label: 'Mirror' }
-]
-const selectedMirror = ref('direct')
+// 更新状态
+const updateAvailable = ref(false)
+const updateInfo = ref<{ version: string; releaseDate: string; releaseNotes: string } | null>(null)
+const downloading = ref(false)
+const progress = ref(0)
+const downloaded = ref(false)
 
 // 清理函数
+let cleanupAvailable: (() => void) | null = null
+let cleanupNotAvailable: (() => void) | null = null
 let cleanupProgress: (() => void) | null = null
 let cleanupDownloaded: (() => void) | null = null
 let cleanupError: (() => void) | null = null
@@ -37,64 +29,27 @@ let cleanupError: (() => void) | null = null
 async function handleCheck(): Promise<void> {
   checking.value = true
   error.value = ''
-  try {
-    const result = await updater.checkForUpdate()
-    if (result.hasUpdate) {
-      hasUpdate.value = true
-      updateInfo.value = result
-      showPanel.value = true
-    } else {
-      error.value = '当前已是最新版本'
-      setTimeout(() => (error.value = ''), 3000)
-    }
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : '检查更新失败'
-  } finally {
-    checking.value = false
+  const ok = await updater.checkForUpdate()
+  if (!ok) {
+    error.value = '检查更新失败，请查看日志'
   }
+  setTimeout(() => (checking.value = false), 2000)
 }
 
-/** 开始下载 */
+/** 下载更新 */
 async function handleDownload(): Promise<void> {
-  if (!updateInfo.value?.asset?.browser_download_url) {
-    error.value = '未找到匹配当前平台的安装包'
-    return
-  }
-
   downloading.value = true
-  paused.value = false
   progress.value = 0
   error.value = ''
-  downloadedFilePath.value = ''
-
-  await updater.downloadUpdate(updateInfo.value.asset.browser_download_url, selectedMirror.value)
-}
-
-/** 暂停下载 */
-async function handlePause(): Promise<void> {
-  await updater.pauseDownload()
-  paused.value = true
-}
-
-/** 恢复下载 */
-async function handleResume(): Promise<void> {
-  await updater.resumeDownload()
-  paused.value = false
-}
-
-/** 取消下载 */
-async function handleCancel(): Promise<void> {
-  await updater.cancelDownload()
-  downloading.value = false
-  paused.value = false
-  progress.value = 0
-}
-
-/** 打开已下载的安装包 */
-async function handleOpenFile(): Promise<void> {
-  if (downloadedFilePath.value) {
-    await updater.openFile(downloadedFilePath.value)
+  const ok = await updater.downloadUpdate()
+  if (!ok) {
+    downloading.value = false
   }
+}
+
+/** 退出并安装 */
+async function handleInstall(): Promise<void> {
+  await updater.installUpdate()
 }
 
 /** 关闭面板 */
@@ -102,20 +57,28 @@ function handleClose(): void {
   showPanel.value = false
 }
 
-onMounted(() => {
-  // 监听下载进度
+onMounted(async () => {
+  // 获取当前版本号
+  currentVersion.value = await getVersion()
+
+  // 事件监听
+  cleanupAvailable = updater.onUpdateAvailable((info) => {
+    updateAvailable.value = true
+    updateInfo.value = info
+    showPanel.value = true
+  })
+  cleanupNotAvailable = updater.onUpdateNotAvailable(() => {
+    error.value = '当前已是最新版本'
+    setTimeout(() => (error.value = ''), 3000)
+  })
   cleanupProgress = updater.onProgress((percent: number) => {
     progress.value = percent
   })
-
-  // 监听下载完成
-  cleanupDownloaded = updater.onDownloaded((filePath: string) => {
+  cleanupDownloaded = updater.onDownloaded(() => {
     downloading.value = false
     progress.value = 100
-    downloadedFilePath.value = filePath
+    downloaded.value = true
   })
-
-  // 监听下载错误
   cleanupError = updater.onError((message: string) => {
     downloading.value = false
     error.value = message
@@ -126,6 +89,8 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  cleanupAvailable?.()
+  cleanupNotAvailable?.()
   cleanupProgress?.()
   cleanupDownloaded?.()
   cleanupError?.()
@@ -133,69 +98,78 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <!-- 检查更新按钮 -->
-  <button class="updater-check-btn" :disabled="checking" @click="handleCheck">
-    {{ checking ? '检查中...' : '检查更新' }}
-  </button>
-
-  <!-- 错误提示 -->
-  <p v-if="error && !showPanel" class="updater-error">{{ error }}</p>
-
-  <!-- 更新面板 -->
-  <div v-if="showPanel && updateInfo" class="updater-panel">
-    <div class="updater-panel-header">
-      <span class="updater-title">
-        发现新版本
-        <strong>{{ updateInfo.latestVersion }}</strong>
-        <span v-if="updateInfo.date" class="updater-date">[{{ updateInfo.date }}]</span>
-      </span>
-      <button class="updater-close" @click="handleClose">✕</button>
+  <div class="updater-container">
+    <!-- 当前版本号 + 检查更新按钮 -->
+    <div class="updater-buttons">
+      <span class="updater-version">v{{ currentVersion }}</span>
+      <button class="updater-check-btn" :disabled="checking" @click="handleCheck">
+        {{ checking ? '检查中...' : '检查更新' }}
+      </button>
     </div>
 
-    <div class="updater-panel-body">
-      <!-- 下载中 -->
-      <div v-if="downloading" class="updater-downloading">
-        <div class="updater-progress-bar">
-          <div class="updater-progress-fill" :style="{ width: progress + '%' }"></div>
+    <!-- 错误提示 -->
+    <p v-if="error && !showPanel" class="updater-error">{{ error }}</p>
+
+    <!-- 更新面板 -->
+    <div v-if="showPanel" class="updater-panel">
+      <div class="updater-panel-header">
+        <span class="updater-title">
+          发现新版本
+          <strong v-if="updateInfo">{{ updateInfo.version }}</strong>
+        </span>
+        <button class="updater-close" @click="handleClose">✕</button>
+      </div>
+
+      <div class="updater-panel-body">
+        <!-- 下载中 -->
+        <div v-if="downloading" class="updater-downloading">
+          <div class="updater-progress-bar">
+            <div class="updater-progress-fill" :style="{ width: progress + '%' }"></div>
+          </div>
+          <span class="updater-progress-text">{{ progress }}%</span>
         </div>
-        <span class="updater-progress-text">{{ progress }}%</span>
-        <div class="updater-actions">
-          <button v-if="!paused" @click="handlePause">暂停</button>
-          <button v-else @click="handleResume">恢复</button>
-          <button @click="handleCancel">取消</button>
+
+        <!-- 下载完成 -->
+        <div v-else-if="downloaded" class="updater-downloaded">
+          <p>更新下载完成！</p>
+          <button class="updater-install-btn" @click="handleInstall">退出并安装</button>
         </div>
-      </div>
 
-      <!-- 下载完成 -->
-      <div v-else-if="downloadedFilePath" class="updater-downloaded">
-        <p>下载完成！</p>
-        <button class="updater-install-btn" @click="handleOpenFile">打开安装包</button>
-      </div>
-
-      <!-- 下载前 -->
-      <div v-else class="updater-pre-download">
-        <div class="updater-mirror-select">
-          <label>下载源：</label>
-          <select v-model="selectedMirror">
-            <option v-for="m in mirrors" :key="m.value" :value="m.value">{{ m.label }}</option>
-          </select>
+        <!-- 下载前 -->
+        <div v-else>
+          <button class="updater-download-btn" @click="handleDownload">下载更新</button>
         </div>
-        <button class="updater-download-btn" @click="handleDownload">下载更新</button>
-      </div>
 
-      <!-- 更新日志 -->
-      <div v-if="updateInfo.releaseNotes" class="updater-changelog">
-        <div class="updater-changelog-title">更新日志：</div>
-        <div class="updater-changelog-body">{{ updateInfo.releaseNotes }}</div>
-      </div>
+        <div v-if="updateInfo?.releaseNotes" class="updater-changelog">
+          <div class="updater-changelog-title">更新日志：</div>
+          <div class="updater-changelog-body">{{ updateInfo.releaseNotes }}</div>
+        </div>
 
-      <!-- 错误 -->
-      <p v-if="error" class="updater-error">{{ error }}</p>
+        <p v-if="error" class="updater-error">{{ error }}</p>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
+.updater-container {
+  display: inline-block;
+}
+
+.updater-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.updater-version {
+  font-size: 13px;
+  color: #999;
+  padding: 2px 8px;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
 .updater-check-btn {
   padding: 6px 16px;
   font-size: 13px;
@@ -220,12 +194,13 @@ onUnmounted(() => {
   position: fixed;
   top: 20px;
   right: 20px;
-  width: 380px;
+  width: 420px;
+  max-height: 80vh;
+  overflow-y: auto;
   background: #fff;
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   z-index: 9999;
-  overflow: hidden;
 }
 
 .updater-panel-header {
@@ -242,12 +217,7 @@ onUnmounted(() => {
 }
 
 .updater-title strong {
-  margin: 0 4px;
-}
-
-.updater-date {
-  opacity: 0.8;
-  font-size: 12px;
+  margin-left: 6px;
 }
 
 .updater-close {
@@ -288,27 +258,6 @@ onUnmounted(() => {
   color: #666;
 }
 
-.updater-actions {
-  margin-top: 12px;
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-}
-
-.updater-actions button {
-  padding: 4px 12px;
-  font-size: 12px;
-  border: 1px solid #dcdcdc;
-  border-radius: 4px;
-  background: #fff;
-  cursor: pointer;
-}
-
-.updater-actions button:hover {
-  border-color: #42b883;
-  color: #42b883;
-}
-
 .updater-downloaded {
   text-align: center;
 }
@@ -331,27 +280,6 @@ onUnmounted(() => {
 
 .updater-install-btn:hover {
   background: #3aa776;
-}
-
-.updater-pre-download {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.updater-mirror-select {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 13px;
-}
-
-.updater-mirror-select select {
-  padding: 4px 8px;
-  border: 1px solid #dcdcdc;
-  border-radius: 4px;
-  font-size: 13px;
 }
 
 .updater-download-btn {

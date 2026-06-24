@@ -1,62 +1,68 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
-// 更新模块 API
+// 更新模块 API（基于 electron-updater，支持 blockmap 增量更新）
 const updater = {
   /** 检查更新 */
-  checkForUpdate: (): Promise<{
-    hasUpdate: boolean
-    currentVersion: string
-    latestVersion: string
-    date?: string
-    releaseNotes?: string
-    asset?: { name: string; browser_download_url: string }
-  }> => ipcRenderer.invoke('updater:check'),
+  checkForUpdate: (): Promise<boolean> =>
+    ipcRenderer.invoke('incremental-updater:check'),
 
-  /** 开始下载更新 */
-  downloadUpdate: (url: string, mirror: string): Promise<boolean> =>
-    ipcRenderer.invoke('updater:download', { url, mirror }),
+  /** 下载更新 */
+  downloadUpdate: (): Promise<boolean> =>
+    ipcRenderer.invoke('incremental-updater:download'),
 
-  /** 暂停下载 */
-  pauseDownload: (): Promise<boolean> => ipcRenderer.invoke('updater:pause'),
+  /** 安装更新（退出应用并安装） */
+  installUpdate: (): Promise<boolean> =>
+    ipcRenderer.invoke('incremental-updater:install'),
 
-  /** 恢复下载 */
-  resumeDownload: (): Promise<boolean> => ipcRenderer.invoke('updater:resume'),
+  /** 监听发现新版本 */
+  onUpdateAvailable: (
+    callback: (info: { version: string; releaseDate: string; releaseNotes: string }) => void
+  ): (() => void) => {
+    const handler = (_event: IpcRendererEvent, data: unknown): void =>
+      callback(data as { version: string; releaseDate: string; releaseNotes: string })
+    ipcRenderer.on('incremental-updater:update-available', handler)
+    return () => ipcRenderer.removeListener('incremental-updater:update-available', handler)
+  },
 
-  /** 取消下载 */
-  cancelDownload: (): Promise<boolean> => ipcRenderer.invoke('updater:cancel'),
-
-  /** 打开已下载的安装包 */
-  openFile: (filePath: string): Promise<boolean> =>
-    ipcRenderer.invoke('updater:open-file', filePath),
+  /** 监听无可用更新 */
+  onUpdateNotAvailable: (callback: (info: { version: string }) => void): (() => void) => {
+    const handler = (_event: IpcRendererEvent, data: unknown): void =>
+      callback(data as { version: string })
+    ipcRenderer.on('incremental-updater:update-not-available', handler)
+    return () => ipcRenderer.removeListener('incremental-updater:update-not-available', handler)
+  },
 
   /** 监听下载进度 */
   onProgress: (callback: (percent: number) => void): (() => void) => {
     const handler = (_event: IpcRendererEvent, data: { percent: number }): void =>
       callback(data.percent)
-    ipcRenderer.on('updater:progress', handler)
-    return () => ipcRenderer.removeListener('updater:progress', handler)
+    ipcRenderer.on('incremental-updater:progress', handler)
+    return () => ipcRenderer.removeListener('incremental-updater:progress', handler)
   },
 
   /** 监听下载完成 */
-  onDownloaded: (callback: (filePath: string) => void): (() => void) => {
-    const handler = (_event: IpcRendererEvent, data: { filePath: string }): void =>
-      callback(data.filePath)
-    ipcRenderer.on('updater:downloaded', handler)
-    return () => ipcRenderer.removeListener('updater:downloaded', handler)
+  onDownloaded: (callback: () => void): (() => void) => {
+    const handler = (): void => callback()
+    ipcRenderer.on('incremental-updater:downloaded', handler)
+    return () => ipcRenderer.removeListener('incremental-updater:downloaded', handler)
   },
 
-  /** 监听下载错误 */
+  /** 监听错误 */
   onError: (callback: (message: string) => void): (() => void) => {
     const handler = (_event: IpcRendererEvent, data: { message: string }): void =>
       callback(data.message)
-    ipcRenderer.on('updater:error', handler)
-    return () => ipcRenderer.removeListener('updater:error', handler)
+    ipcRenderer.on('incremental-updater:error', handler)
+    return () => ipcRenderer.removeListener('incremental-updater:error', handler)
   }
 }
 
 // Custom APIs for renderer
-const api = { updater }
+const api = {
+  updater,
+  /** 获取当前应用版本号 */
+  getVersion: (): Promise<string> => ipcRenderer.invoke('app:get-version')
+}
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
