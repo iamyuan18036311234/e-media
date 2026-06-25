@@ -4,3 +4,12 @@ out
 .DS_Store
 .eslintcache
 *.log*
+
+# 环境变量（包含敏感 Token，不要提交）
+.env
+.env.*
+!.env.example
+
+# 临时脚本
+fix-releases.mjs
+publish.mjs
