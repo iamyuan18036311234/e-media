@@ -52,22 +52,21 @@ const menuItems = [
 </script>
 
 <template>
-  <div class="h-screen flex flex-col bg-[#14141c]">
-    <!-- 顶部通栏 - 黛青 -->
-    <header class="h-14 flex items-center justify-between px-6 bg-[#1c2535] shrink-0 border-b border-[#2a3548]">
-      <span class="text-lg font-bold tracking-widest bg-gradient-to-r from-[#d4816a] to-[#c9a96e] bg-clip-text text-transparent">流光 · 视界</span>
-      <a-avatar size="small" class="!bg-gradient-to-r !from-[#d4816a] !to-[#c9a96e]">U</a-avatar>
+  <div class="h-screen flex flex-col bg-[#f7f4ef]">
+    <!-- 顶部通栏 - 宣纸白 -->
+    <header class="h-14 flex items-center justify-between px-6 bg-[#faf8f4] shrink-0 border-b border-[#e8e0d4]">
+      <span class="text-lg font-bold tracking-widest text-[#8b4c3b]">流光 · 视界</span>
+      <a-avatar size="small" class="!bg-[#8b4c3b]">U</a-avatar>
     </header>
 
     <div class="flex flex-1 overflow-hidden">
-      <!-- 侧边栏 - 黛青 -->
+      <!-- 侧边栏 - 月白 -->
       <aside
-        class="bg-[#1c2535] flex flex-col shrink-0 transition-all duration-200 border-r border-[#2a3548]"
+        class="bg-[#faf8f4] flex flex-col shrink-0 transition-all duration-200 border-r border-[#e8e0d4]"
         :class="collapsed ? 'w-16' : 'w-52'"
       >
         <a-menu
           v-model:selectedKeys="selectedKeys"
-          theme="dark"
           mode="inline"
           :items="menuItems"
           :inline-collapsed="collapsed"
@@ -76,7 +75,7 @@ const menuItems = [
 
         <!-- 折叠按钮 -->
         <div
-          class="shrink-0 p-4 text-center text-[#6b7b8d] text-base cursor-pointer transition-colors hover:text-[#d4816a] hover:bg-white/4 border-t border-[#2a3548]"
+          class="shrink-0 p-4 text-center text-[#b5a898] text-base cursor-pointer transition-colors hover:text-[#8b4c3b] hover:bg-[#8b4c3b]/5 border-t border-[#e8e0d4]"
           @click="collapsed = !collapsed"
         >
           <MenuUnfoldOutlined v-if="collapsed" />
@@ -84,8 +83,8 @@ const menuItems = [
         </div>
       </aside>
 
-      <!-- 内容区 - 墨色偏暖 -->
-      <main class="flex-1 m-3 p-5 bg-[#1a1a24] rounded-xl overflow-auto">
+      <!-- 内容区 - 绢色 -->
+      <main class="flex-1 m-3 p-5 bg-[#fefcf8] rounded-xl overflow-auto shadow-[0_1px_3px_rgba(139,76,59,0.06)]">
         <router-view />
       </main>
     </div>
@@ -99,7 +98,7 @@ const menuItems = [
   border-inline-end: none !important;
   background: transparent !important;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.06) transparent;
+  scrollbar-color: rgba(139, 76, 59, 0.1) transparent;
 }
 .sider-menu::-webkit-scrollbar {
   width: 4px;
@@ -108,30 +107,30 @@ const menuItems = [
   background: transparent;
 }
 .sider-menu::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(139, 76, 59, 0.1);
   border-radius: 2px;
 }
 .sider-menu::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(139, 76, 59, 0.2);
 }
 
-/* 菜单项 - 象牙白文字 */
+/* 菜单项 - 墨色文字 */
 .sider-menu .ant-menu-item {
-  color: rgba(235, 225, 210, 0.55) !important;
+  color: #7a6e62 !important;
   margin: 2px 8px !important;
   border-radius: 8px !important;
 }
-/* hover - 淡胭脂 */
+/* hover - 淡朱砂 */
 .sider-menu .ant-menu-item:hover:not(.ant-menu-item-selected) {
-  background: rgba(212, 129, 106, 0.08) !important;
-  color: rgba(235, 225, 210, 0.85) !important;
+  background: rgba(139, 76, 59, 0.06) !important;
+  color: #8b4c3b !important;
 }
-/* 选中态 - 胭脂 */
+/* 选中态 - 朱砂 */
 .sider-menu .ant-menu-item-selected {
-  background: rgba(212, 129, 106, 0.12) !important;
-  color: #d4816a !important;
+  background: rgba(139, 76, 59, 0.1) !important;
+  color: #8b4c3b !important;
 }
 .sider-menu .ant-menu-item-selected .anticon {
-  color: #d4816a !important;
+  color: #8b4c3b !important;
 }
 </style>
