@@ -33,7 +33,18 @@ export default defineConfig(
             lang: 'ts'
           }
         }
-      ]
+      ],
+      // 布局对齐阶段使用模拟数据，放宽以下规则
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
+      ],
+      // 允许使用命名空间组织 API 类型（vben 风格）
+      '@typescript-eslint/no-namespace': 'off',
+      // 允许 catch 块为空（mock 阶段吞没错误）
+      'no-empty': ['error', { allowEmptyCatch: true }]
     }
   },
   eslintConfigPrettier

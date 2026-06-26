@@ -1,0 +1,39 @@
+{
+  "auth": {
+    "login": "登录",
+    "register": "注册",
+    "codeLogin": "验证码登录",
+    "qrcodeLogin": "二维码登录",
+    "forgetPassword": "忘记密码",
+    "loginSuccess": "登录成功",
+    "loginSuccessDesc": "欢迎回来",
+    "logout": "退出登录"
+  },
+  "dashboard": {
+    "title": "概览",
+    "analytics": "分析页",
+    "workspace": "工作台"
+  },
+  "fallback": {
+    "notFound": "页面不存在",
+    "forbidden": "无权限访问",
+    "internalError": "服务器错误",
+    "comingSoon": "功能开发中",
+    "offline": "网络已断开"
+  },
+  "system": {
+    "title": "系统设置",
+    "theme": "主题",
+    "language": "语言",
+    "sidebar": "侧边栏",
+    "tabbar": "标签栏",
+    "breadcrumb": "面包屑"
+  },
+  "widgets": {
+    "document": "文档",
+    "qa": "问题反馈",
+    "notice": "通知",
+    "clearNotice": "清空通知",
+    "markAllRead": "全部已读"
+  }
+}

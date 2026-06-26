@@ -1,0 +1,39 @@
+{
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "codeLogin": "Code Login",
+    "qrcodeLogin": "Qr Code Login",
+    "forgetPassword": "Forget Password",
+    "loginSuccess": "Login Success",
+    "loginSuccessDesc": "Welcome back",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "analytics": "Analytics",
+    "workspace": "Workspace"
+  },
+  "fallback": {
+    "notFound": "Not Found",
+    "forbidden": "Forbidden",
+    "internalError": "Internal Error",
+    "comingSoon": "Coming Soon",
+    "offline": "Offline"
+  },
+  "system": {
+    "title": "System",
+    "theme": "Theme",
+    "language": "Language",
+    "sidebar": "Sidebar",
+    "tabbar": "Tabbar",
+    "breadcrumb": "Breadcrumb"
+  },
+  "widgets": {
+    "document": "Document",
+    "qa": "Q&A",
+    "notice": "Notice",
+    "clearNotice": "Clear Notice",
+    "markAllRead": "Mark All Read"
+  }
+}

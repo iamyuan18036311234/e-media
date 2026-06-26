@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { Button, Progress, Tag } from 'ant-design-vue'
+import { preferences } from '#/preferences'
 
 const { updater, getVersion } = window.api
+
+/** 主题色（用于进度条） */
+const primaryColor = preferences.theme.colorPrimary
 
 // 当前版本号
 const currentVersion = ref('')
@@ -101,10 +106,8 @@ onUnmounted(() => {
   <div class="updater-container">
     <!-- 当前版本号 + 检查更新按钮 -->
     <div class="updater-buttons">
-      <span class="updater-version">v{{ currentVersion }}</span>
-      <button class="updater-check-btn" :disabled="checking" @click="handleCheck">
-        {{ checking ? '检查中...' : '检查更新' }}
-      </button>
+      <Tag color="default" class="version-tag">v{{ currentVersion }}</Tag>
+      <Button size="small" :loading="checking" @click="handleCheck">检查更新</Button>
     </div>
 
     <!-- 错误提示 -->
@@ -123,21 +126,18 @@ onUnmounted(() => {
       <div class="updater-panel-body">
         <!-- 下载中 -->
         <div v-if="downloading" class="updater-downloading">
-          <div class="updater-progress-bar">
-            <div class="updater-progress-fill" :style="{ width: progress + '%' }"></div>
-          </div>
-          <span class="updater-progress-text">{{ progress }}%</span>
+          <Progress :percent="progress" :stroke-color="primaryColor" />
         </div>
 
         <!-- 下载完成 -->
         <div v-else-if="downloaded" class="updater-downloaded">
           <p>更新下载完成！</p>
-          <button class="updater-install-btn" @click="handleInstall">退出并安装</button>
+          <Button type="primary" @click="handleInstall">退出并安装</Button>
         </div>
 
         <!-- 下载前 -->
         <div v-else>
-          <button class="updater-download-btn" @click="handleDownload">下载更新</button>
+          <Button type="primary" @click="handleDownload">下载更新</Button>
         </div>
 
         <div v-if="updateInfo?.releaseNotes" class="updater-changelog">
@@ -162,32 +162,9 @@ onUnmounted(() => {
   align-items: center;
 }
 
-.updater-version {
-  font-size: 13px;
-  color: #999;
-  padding: 2px 8px;
-  background: #f5f5f5;
-  border-radius: 4px;
-}
-
-.updater-check-btn {
-  padding: 6px 16px;
-  font-size: 13px;
-  border: 1px solid #dcdcdc;
-  border-radius: 6px;
-  background: #fff;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.updater-check-btn:hover:not(:disabled) {
-  border-color: #42b883;
-  color: #42b883;
-}
-
-.updater-check-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.version-tag {
+  margin: 0;
+  font-size: 12px;
 }
 
 .updater-panel {
@@ -197,7 +174,7 @@ onUnmounted(() => {
   width: 420px;
   max-height: 80vh;
   overflow-y: auto;
-  background: #fff;
+  background: var(--panel-bg, #fff);
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   z-index: 9999;
@@ -208,8 +185,9 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: #42b883;
+  background: var(--primary, #8b4c3b);
   color: #fff;
+  border-radius: 10px 10px 0 0;
 }
 
 .updater-title {
@@ -228,34 +206,20 @@ onUnmounted(() => {
   font-size: 16px;
   padding: 0;
   line-height: 1;
+  opacity: 0.85;
+}
+
+.updater-close:hover {
+  opacity: 1;
 }
 
 .updater-panel-body {
   padding: 16px;
+  color: var(--text-color, #333);
 }
 
 .updater-downloading {
   text-align: center;
-}
-
-.updater-progress-bar {
-  width: 100%;
-  height: 8px;
-  background: #e0e0e0;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 8px;
-}
-
-.updater-progress-fill {
-  height: 100%;
-  background: #42b883;
-  transition: width 0.3s;
-}
-
-.updater-progress-text {
-  font-size: 13px;
-  color: #666;
 }
 
 .updater-downloaded {
@@ -264,42 +228,14 @@ onUnmounted(() => {
 
 .updater-downloaded p {
   margin: 0 0 12px;
-  color: #42b883;
+  color: var(--primary, #8b4c3b);
   font-weight: 500;
-}
-
-.updater-install-btn {
-  padding: 8px 24px;
-  font-size: 14px;
-  border: none;
-  border-radius: 6px;
-  background: #42b883;
-  color: #fff;
-  cursor: pointer;
-}
-
-.updater-install-btn:hover {
-  background: #3aa776;
-}
-
-.updater-download-btn {
-  padding: 6px 20px;
-  font-size: 14px;
-  border: none;
-  border-radius: 6px;
-  background: #42b883;
-  color: #fff;
-  cursor: pointer;
-}
-
-.updater-download-btn:hover {
-  background: #3aa776;
 }
 
 .updater-changelog {
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .updater-changelog-title {
@@ -310,7 +246,7 @@ onUnmounted(() => {
 
 .updater-changelog-body {
   font-size: 13px;
-  color: #666;
+  color: rgba(0, 0, 0, 0.55);
   white-space: pre-wrap;
   max-height: 150px;
   overflow-y: auto;
@@ -318,7 +254,7 @@ onUnmounted(() => {
 }
 
 .updater-error {
-  color: #e53935;
+  color: #ff4d4f;
   font-size: 13px;
   margin: 8px 0 0;
 }

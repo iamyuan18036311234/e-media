@@ -96,24 +96,24 @@ function handleSubmit(): void {
         1. TailwindCSS 样式测试
       </h2>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-blue-100 text-blue-800 p-4 rounded-lg text-center font-medium">
-          蓝色卡片
-        </div>
+        <div class="bg-blue-100 text-blue-800 p-4 rounded-lg text-center font-medium">蓝色卡片</div>
         <div class="bg-green-100 text-green-800 p-4 rounded-lg text-center font-medium">
           绿色卡片
         </div>
         <div class="bg-yellow-100 text-yellow-800 p-4 rounded-lg text-center font-medium">
           黄色卡片
         </div>
-        <div class="bg-red-100 text-red-800 p-4 rounded-lg text-center font-medium">
-          红色卡片
-        </div>
+        <div class="bg-red-100 text-red-800 p-4 rounded-lg text-center font-medium">红色卡片</div>
       </div>
       <div class="mt-4 flex gap-2 flex-wrap">
         <span class="px-3 py-1 bg-purple-500 text-white rounded-full text-sm">圆角标签</span>
         <span class="px-3 py-1 bg-pink-500 text-white rounded text-sm">方角标签</span>
-        <span class="px-3 py-1 bg-indigo-500 text-white rounded-md text-sm shadow-md">阴影标签</span>
-        <span class="px-3 py-1 bg-teal-500 text-white rounded-lg text-sm hover:bg-teal-600 transition cursor-pointer">
+        <span class="px-3 py-1 bg-indigo-500 text-white rounded-md text-sm shadow-md"
+          >阴影标签</span
+        >
+        <span
+          class="px-3 py-1 bg-teal-500 text-white rounded-lg text-sm hover:bg-teal-600 transition cursor-pointer"
+        >
           悬停效果
         </span>
       </div>
