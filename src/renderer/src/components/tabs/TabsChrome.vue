@@ -43,7 +43,6 @@ const tabsView = computed(() => props.tabs as TabConfig[])
 
 function onClickTab(tab: TabConfig) {
   if (tab.key !== active.value) {
-    active.value = tab.key
     emit('update:active', tab.key)
   }
 }

@@ -347,7 +347,7 @@ function markAllRead() {
 
       <!-- 多标签 -->
       <div v-if="preferences.tabbar.enable" class="tabbar">
-        <TabsView v-model:active="currentActive" :context-menus="createContextMenus"
+        <TabsView :active="currentActive" :context-menus="createContextMenus"
           :draggable="preferences.tabbar.draggable" :middle-click-to-close="preferences.tabbar.middleClickToClose"
           :show-icon="preferences.tabbar.showIcon" :style-type="preferences.tabbar.styleType" :tabs="currentTabs"
           :wheelable="preferences.tabbar.wheelable" @close="onTabClose" @sort-tabs="onSortTabs" @unpin="onTabUnpin"

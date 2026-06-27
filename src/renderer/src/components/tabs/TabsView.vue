@@ -184,7 +184,7 @@ onUnmounted(() => {
       <div ref="scrollContainerRef" class="tabs-scroll-container h-full overflow-x-auto overflow-y-hidden"
         @scroll="onScroll" @wheel="handleWheel">
         <div data-tabs-viewport class="h-full inline-block">
-          <TabsChrome v-model:active="active" :content-class="contentClass" :context-menus="contextMenus"
+          <TabsChrome :active="active" :content-class="contentClass" :context-menus="contextMenus"
             :draggable="draggable" :gap="gap" :middle-click-to-close="middleClickToClose" :show-icon="showIcon"
             :style-type="styleType" :tabs="tabs" :wheelable="wheelable" @close="(k) => emit('close', k)"
             @sort-tabs="(o, n) => emit('sort-tabs', o, n)" @unpin="(t) => emit('unpin', t)"
