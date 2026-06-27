@@ -3,7 +3,10 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { Button, Progress, Tag } from 'ant-design-vue'
 import { preferences } from '#/preferences'
 
-const { updater, getVersion } = window.api
+// 浏览器环境（非 Electron）下 window.api 不存在，需安全降级
+const api = window.api
+const updater = api?.updater
+const getVersion = api?.getVersion
 
 /** 主题色（用于进度条） */
 const primaryColor = preferences.theme.colorPrimary
@@ -32,6 +35,10 @@ let cleanupError: (() => void) | null = null
 
 /** 检查更新 */
 async function handleCheck(): Promise<void> {
+  if (!updater) {
+    error.value = '当前环境不支持更新检查'
+    return
+  }
   checking.value = true
   error.value = ''
   const ok = await updater.checkForUpdate()
@@ -43,6 +50,7 @@ async function handleCheck(): Promise<void> {
 
 /** 下载更新 */
 async function handleDownload(): Promise<void> {
+  if (!updater) return
   downloading.value = true
   progress.value = 0
   error.value = ''
@@ -54,6 +62,7 @@ async function handleDownload(): Promise<void> {
 
 /** 退出并安装 */
 async function handleInstall(): Promise<void> {
+  if (!updater) return
   await updater.installUpdate()
 }
 
@@ -63,6 +72,12 @@ function handleClose(): void {
 }
 
 onMounted(async () => {
+  // 浏览器环境下无 updater API，跳过
+  if (!updater || !getVersion) {
+    currentVersion.value = 'web'
+    return
+  }
+
   // 获取当前版本号
   currentVersion.value = await getVersion()
 

@@ -22,7 +22,6 @@ import {
   LayoutContent,
   LayoutHeader,
   LayoutSider,
-  Menu,
   Tooltip
 } from 'ant-design-vue'
 import { storeToRefs } from 'pinia'
@@ -67,27 +66,28 @@ function toggleTheme() {
   preferences.theme.mode = isDark.value ? 'light' : 'dark'
 }
 
-/** 菜单项（递归构建 antd Menu 结构） */
-function buildMenuItems(menus: MenuRecord[]): any[] {
-  return menus
-    .filter((m) => !m.hideInMenu)
-    .map((m) => {
-      const hasChildren = m.children && m.children.length > 0
-      const label = m.title || m.name
-      const icon = m.icon ? () => h(Icon, { icon: m.icon }) : undefined
-      if (hasChildren) {
-        return {
-          key: m.path,
-          icon,
-          label,
-          children: buildMenuItems(m.children!)
-        }
-      }
-      return { key: m.path, icon, label }
-    })
+/** 过滤后的菜单（用于自定义菜单渲染） */
+const filteredMenus = computed(() =>
+  accessMenus.value.filter((m) => !m.hideInMenu)
+)
+
+/** 递归过滤子菜单 */
+function filterChildren(menus?: MenuRecord[]): MenuRecord[] {
+  if (!menus) return []
+  return menus.filter((m) => !m.hideInMenu)
 }
 
-const menuItems = computed(() => buildMenuItems(accessMenus.value))
+/** 自定义菜单：展开的子菜单 key 列表 */
+const openKeys = ref<string[]>([])
+
+function onToggleMenu(key: string) {
+  const idx = openKeys.value.indexOf(key)
+  if (idx >= 0) {
+    openKeys.value.splice(idx, 1)
+  } else {
+    openKeys.value.push(key)
+  }
+}
 
 /** 当前选中的菜单项（按完整路径匹配） */
 const selectedKeys = ref<string[]>([])
@@ -188,13 +188,47 @@ function markAllRead() {
         <span v-show="!collapsed" class="logo-text">流光视频</span>
       </div>
 
-      <Menu
-        :selected-keys="selectedKeys"
-        mode="inline"
-        :items="menuItems"
-        class="side-menu"
-        @click="onMenuClick"
-      />
+      <!-- 自定义侧边菜单（避免 antd Menu 的 useInjectMenu 上下文断链问题） -->
+      <ul class="side-menu-custom">
+        <template v-for="menu in filteredMenus" :key="menu.path">
+          <!-- 有子菜单 -->
+          <li v-if="filterChildren(menu.children).length" class="menu-group">
+            <div
+              class="menu-title"
+              :class="{ active: openKeys.includes(menu.path) }"
+              @click="onToggleMenu(menu.path)"
+            >
+              <Icon v-if="menu.icon" :icon="menu.icon" :size="16" />
+              <span class="menu-text">{{ menu.title || menu.name }}</span>
+              <span class="menu-arrow" :class="{ open: openKeys.includes(menu.path) }"
+                >›</span
+              >
+            </div>
+            <ul v-show="openKeys.includes(menu.path)" class="menu-sub">
+              <li
+                v-for="child in filterChildren(menu.children)"
+                :key="child.path"
+                class="menu-item"
+                :class="{ selected: selectedKeys.includes(child.path) }"
+                @click="onMenuClick({ key: child.path })"
+              >
+                <Icon v-if="child.icon" :icon="child.icon" :size="14" />
+                <span class="menu-text">{{ child.title || child.name }}</span>
+              </li>
+            </ul>
+          </li>
+          <!-- 无子菜单 -->
+          <li
+            v-else
+            class="menu-item"
+            :class="{ selected: selectedKeys.includes(menu.path) }"
+            @click="onMenuClick({ key: menu.path })"
+          >
+            <Icon v-if="menu.icon" :icon="menu.icon" :size="16" />
+            <span class="menu-text">{{ menu.title || menu.name }}</span>
+          </li>
+        </template>
+      </ul>
     </LayoutSider>
 
     <Layout class="layout-main">
@@ -211,15 +245,44 @@ function markAllRead() {
             </BreadcrumbItem>
           </Breadcrumb>
 
-          <!-- 顶部导航菜单（top-nav 模式） -->
-          <Menu
-            v-if="isTopNav"
-            :selected-keys="selectedKeys"
-            mode="horizontal"
-            :items="menuItems"
-            class="top-menu"
-            @click="onMenuClick"
-          />
+          <!-- 顶部导航菜单（top-nav 模式，自定义实现） -->
+          <ul v-if="isTopNav" class="top-menu-custom">
+            <template v-for="menu in filteredMenus" :key="menu.path">
+              <li v-if="filterChildren(menu.children).length" class="top-menu-group">
+                <div
+                  class="top-menu-title"
+                  :class="{ active: openKeys.includes(menu.path) }"
+                  @click="onToggleMenu(menu.path)"
+                >
+                  <Icon v-if="menu.icon" :icon="menu.icon" :size="16" />
+                  <span>{{ menu.title || menu.name }}</span>
+                  <span class="menu-arrow" :class="{ open: openKeys.includes(menu.path) }"
+                    >›</span
+                  >
+                </div>
+                <ul v-show="openKeys.includes(menu.path)" class="top-menu-sub">
+                  <li
+                    v-for="child in filterChildren(menu.children)"
+                    :key="child.path"
+                    class="top-menu-item"
+                    :class="{ selected: selectedKeys.includes(child.path) }"
+                    @click="onMenuClick({ key: child.path })"
+                  >
+                    {{ child.title || child.name }}
+                  </li>
+                </ul>
+              </li>
+              <li
+                v-else
+                class="top-menu-item"
+                :class="{ selected: selectedKeys.includes(menu.path) }"
+                @click="onMenuClick({ key: menu.path })"
+              >
+                <Icon v-if="menu.icon" :icon="menu.icon" :size="16" />
+                <span>{{ menu.title || menu.name }}</span>
+              </li>
+            </template>
+          </ul>
         </div>
 
         <div class="header-right">
@@ -324,9 +387,118 @@ function markAllRead() {
   box-shadow: 1px 0 0 rgba(0, 0, 0, 0.06);
 }
 
-.side-menu {
-  border-inline-end: none !important;
-  background: transparent !important;
+/* 自定义侧边菜单 */
+.side-menu-custom {
+  list-style: none;
+  padding: 8px 0;
+  margin: 0;
+  background: transparent;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.menu-group {
+  margin-bottom: 2px;
+}
+
+.menu-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 16px 0 20px;
+  margin: 0 8px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.75);
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.menu-title:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.menu-title.active {
+  color: var(--primary);
+}
+
+.menu-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-arrow {
+  transition: transform 0.2s;
+  transform: rotate(0deg);
+  font-size: 16px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.menu-arrow.open {
+  transform: rotate(90deg);
+}
+
+.menu-sub {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 16px 0 44px;
+  margin: 0 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.65);
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.menu-item:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.menu-item.selected {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* 折叠态隐藏文字 */
+.sider-collapsed .menu-text,
+.sider-collapsed .menu-arrow,
+.sider-collapsed .menu-sub {
+  display: none;
+}
+
+.sider-collapsed .menu-title,
+.sider-collapsed .menu-item {
+  justify-content: center;
+  padding: 0;
+}
+
+:global(html.dark) .menu-title {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+:global(html.dark) .menu-title:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:global(html.dark) .menu-item {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+:global(html.dark) .menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 /* Logo */
@@ -387,10 +559,93 @@ function markAllRead() {
   font-size: 14px;
 }
 
-.top-menu {
-  border-bottom: none !important;
-  background: transparent !important;
+/* 自定义顶部菜单 */
+.top-menu-custom {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   flex: 1;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.top-menu-group {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.top-menu-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.75);
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.top-menu-title:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.top-menu-title.active {
+  color: var(--primary);
+}
+
+.top-menu-sub {
+  list-style: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 160px;
+  background: var(--sider-bg);
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  padding: 4px;
+  margin: 4px 0 0;
+  z-index: 100;
+}
+
+.top-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.65);
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.top-menu-item:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.top-menu-item.selected {
+  background: var(--primary);
+  color: #fff;
+}
+
+:global(html.dark) .top-menu-title,
+:global(html.dark) .top-menu-item {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+:global(html.dark) .top-menu-title:hover,
+:global(html.dark) .top-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .header-right {
