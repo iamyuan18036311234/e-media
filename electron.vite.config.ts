@@ -11,7 +11,13 @@ export default defineConfig({
       alias: {
         '@renderer': resolve('src/renderer/src'),
         '#': resolve('src/renderer/src')
-      }
+      },
+      // 确保 vue / vue-router / pinia 只有一个实例，避免 provide/inject 断链
+      dedupe: ['vue', 'vue-router', 'pinia']
+    },
+    optimizeDeps: {
+      // 明确预构建 ant-design-vue，避免子路径被拆分成多个模块实例
+      include: ['ant-design-vue']
     },
     plugins: [vue(), tailwindcss()]
   }
