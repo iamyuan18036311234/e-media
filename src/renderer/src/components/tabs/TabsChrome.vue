@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { TabConfig, TabsProps } from './types'
-import { ref } from 'vue'
+import { computed } from 'vue'
 import { Dropdown, Menu } from 'ant-design-vue'
 import { CloseOutlined, PushpinFilled } from '@ant-design/icons-vue'
 import Icon from '#/components/Icon.vue'
@@ -15,7 +15,6 @@ defineOptions({
 const props = withDefaults(defineProps<Props>(), {
   contentClass: 'vben-tabs-content',
   contextMenus: () => [] as any,
-  draggable: true,
   gap: 7,
   middleClickToClose: true,
   showIcon: true,
@@ -26,15 +25,21 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   (e: 'close', key: string): void
-  (e: 'sort-tabs', sourceKey: string, targetKey: string): void
+  (e: 'sort-tabs', oldIndex: number, newIndex: number): void
   (e: 'unpin', tab: TabConfig): void
   (e: 'update:active', key: string): void
 }>()
 
 const active = defineModel<string>('active', { default: '' })
 
-/** 拖拽源 key */
-const dragSource = ref<string>('')
+const style = computed(() => {
+  const { gap } = props
+  return {
+    '--gap': `${gap}px`
+  }
+})
+
+const tabsView = computed(() => props.tabs as TabConfig[])
 
 function onClickTab(tab: TabConfig) {
   if (tab.key !== active.value) {
@@ -43,13 +48,11 @@ function onClickTab(tab: TabConfig) {
   }
 }
 
-function onClose(tab: TabConfig, e: MouseEvent) {
-  e.stopPropagation()
+function onClose(tab: TabConfig) {
   emit('close', tab.key)
 }
 
-function onUnpin(tab: TabConfig, e: MouseEvent) {
-  e.stopPropagation()
+function onUnpin(tab: TabConfig) {
   emit('unpin', tab)
 }
 
@@ -59,7 +62,7 @@ function onMouseDown(e: MouseEvent, tab: TabConfig) {
     e.button === 1 &&
     tab.closable !== false &&
     !tab.affixTab &&
-    props.tabs.length > 1 &&
+    tabsView.value.length > 1 &&
     props.middleClickToClose
   ) {
     e.preventDefault()
@@ -68,45 +71,12 @@ function onMouseDown(e: MouseEvent, tab: TabConfig) {
   }
 }
 
-/* ---------- 拖拽排序（原生 HTML5 DnD） ---------- */
-function onDragStart(e: DragEvent, tab: TabConfig) {
-  if (!props.draggable || tab.affixTab) {
-    e.preventDefault()
-    return
-  }
-  dragSource.value = tab.key
-  if (e.dataTransfer) {
-    e.dataTransfer.effectAllowed = 'move'
-    e.dataTransfer.setData('text/plain', tab.key)
-  }
-}
-
-function onDragOver(e: DragEvent, tab: TabConfig) {
-  if (!props.draggable || !dragSource.value) return
-  if (tab.key === dragSource.value) return
-  e.preventDefault()
-  if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'
-}
-
-function onDrop(e: DragEvent, tab: TabConfig) {
-  if (!props.draggable || !dragSource.value) return
-  e.preventDefault()
-  if (dragSource.value && dragSource.value !== tab.key) {
-    emit('sort-tabs', dragSource.value, tab.key)
-  }
-  dragSource.value = ''
-}
-
-function onDragEnd() {
-  dragSource.value = ''
-}
-
 /* ---------- 右键菜单 ---------- */
 function buildMenu(tab: TabConfig) {
   return (props.contextMenus?.(tab) ?? []).map((m) => ({
     key: m.key,
     label: m.text,
-    icon: m.icon ? () => m.icon() : undefined,
+    icon: m.icon ? () => m.icon!() : undefined,
     disabled: m.disabled
   }))
 }
@@ -119,22 +89,18 @@ function onMenuClick({ key }: { key: string | number }, tab: TabConfig) {
 </script>
 
 <template>
-  <div :class="contentClass" :style="{ '--gap': `${gap}px` }"
-    class="tabs-chrome flex h-full w-max overflow-y-hidden pr-6">
+  <div :class="contentClass" :style="style" class="tabs-chrome flex h-full w-max overflow-y-hidden pr-6">
     <TransitionGroup name="slide-left">
-      <Dropdown v-for="(tab, i) in tabs" :key="tab.key" trigger="contextmenu" placement="bottomLeft">
-        <div :class="[
-          {
-            'is-active': tab.key === active,
-            draggable: !tab.affixTab && draggable,
-            'affix-tab': tab.affixTab,
-            dragging: dragSource === tab.key
-          }
-        ]" :data-active-tab="active" :data-index="i"
-          class="tabs-chrome__item translate-all relative -mr-3 flex h-full items-center select-none"
-          data-tab-item="true" :draggable="!tab.affixTab && draggable" @click="onClickTab(tab)"
-          @mousedown="onMouseDown($event, tab)" @dragstart="onDragStart($event, tab)"
-          @dragover="onDragOver($event, tab)" @drop="onDrop($event, tab)" @dragend="onDragEnd">
+      <div v-for="(tab, i) in tabsView" :key="tab.key" :class="[
+        {
+          'is-active': tab.key === active,
+          draggable: !tab.affixTab && draggable,
+          'affix-tab': tab.affixTab
+        }
+      ]" :data-active-tab="active" :data-index="i"
+        class="group tabs-chrome__item translate-all relative -mr-3 flex h-full items-center select-none"
+        data-tab-item="true" @click="onClickTab(tab)" @mousedown="onMouseDown($event, tab)">
+        <Dropdown :trigger="['contextmenu']" placement="bottomLeft">
           <div class="relative size-full px-1">
             <!-- divider -->
             <div v-if="i !== 0 && tab.key !== active"
@@ -162,10 +128,10 @@ function onMenuClick({ key }: { key: string | number }, tab: TabConfig) {
             <div class="tabs-chrome__extra absolute top-1/2 right-[var(--gap)] z-3 size-4 -translate-y-1/2">
               <CloseOutlined v-show="!tab.affixTab && tabs.length > 1 && tab.closable !== false"
                 class="tabs-chrome__close mt-0.5 size-3 cursor-pointer rounded-full text-base/80 transition-all"
-                @click.stop="onClose(tab, $event)" />
+                @click.stop="onClose(tab)" />
               <PushpinFilled v-show="tab.affixTab && tabs.length > 1 && tab.closable !== false"
                 class="tabs-chrome__pin mt-px size-3.5 cursor-pointer rounded-full text-base/80 transition-all"
-                @click.stop="onUnpin(tab, $event)" />
+                @click.stop="onUnpin(tab)" />
             </div>
 
             <!-- tab-item-main -->
@@ -177,11 +143,11 @@ function onMenuClick({ key }: { key: string | number }, tab: TabConfig) {
               </span>
             </div>
           </div>
-        </div>
-        <template #overlay>
-          <Menu :items="buildMenu(tab)" @click="(info) => onMenuClick(info, tab)" />
-        </template>
-      </Dropdown>
+          <template #overlay>
+            <Menu :items="buildMenu(tab)" @click="(info) => onMenuClick(info, tab)" />
+          </template>
+        </Dropdown>
+      </div>
     </TransitionGroup>
   </div>
 </template>
@@ -199,28 +165,34 @@ function onMenuClick({ key }: { key: string | number }, tab: TabConfig) {
   --border-color: rgba(255, 255, 255, 0.1);
 }
 
+/* 关键：让 Dropdown 包裹层不破坏 flex 布局，且不干扰 sortable */
+.tabs-chrome :deep(.ant-dropdown-trigger) {
+  display: contents !important;
+}
+
+/* tab 项基础 */
 .tabs-chrome__item {
   cursor: pointer;
   color: var(--text-muted);
 }
 
-/* hover - 非激活 */
-.tabs-chrome__item:not(.is-active):hover .tabs-chrome__background {
+/* hover - 非激活（排除拖拽中） */
+.tabs-chrome__item:not(.dragging):not(.is-active):hover .tabs-chrome__background {
   padding-bottom: 2px;
 }
 
-.tabs-chrome__item:not(.is-active):hover .tabs-chrome__background-content {
+.tabs-chrome__item:not(.dragging):not(.is-active):hover .tabs-chrome__background-content {
   background: var(--tab-bg-hover);
   margin: 0 2px;
   border-radius: 6px;
 }
 
-.tabs-chrome__item:not(.is-active):hover .tabs-chrome__divider {
+.tabs-chrome__item:not(.dragging):not(.is-active):hover .tabs-chrome__divider {
   opacity: 0;
 }
 
 /* hover 后一个 tab 的 divider 隐藏 */
-.tabs-chrome__item:not(.is-active):hover+.tabs-chrome__item .tabs-chrome__divider {
+.tabs-chrome__item:not(.dragging):not(.is-active):hover+.tabs-chrome__item .tabs-chrome__divider {
   opacity: 0;
 }
 

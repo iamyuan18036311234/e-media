@@ -165,13 +165,19 @@ export const useTabsStore = defineStore('tabs', () => {
     }
   }
 
-  /** 拖拽排序（交换位置） */
-  function sortTabs(sourceKey: string, targetKey: string) {
-    const fromIdx = tabs.value.findIndex((t) => t.key === sourceKey)
-    const toIdx = tabs.value.findIndex((t) => t.key === targetKey)
-    if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return
-    const [moved] = tabs.value.splice(fromIdx, 1)
-    tabs.value.splice(toIdx, 0, moved)
+  /** 拖拽排序（按索引重排，对齐 vben sortTabs(oldIndex, newIndex)） */
+  function sortTabs(oldIndex: number, newIndex: number) {
+    if (
+      oldIndex < 0 ||
+      newIndex < 0 ||
+      oldIndex === newIndex ||
+      oldIndex >= tabs.value.length ||
+      newIndex >= tabs.value.length
+    ) {
+      return
+    }
+    const [moved] = tabs.value.splice(oldIndex, 1)
+    tabs.value.splice(newIndex, 0, moved)
     updateTime.value = Date.now()
   }
 

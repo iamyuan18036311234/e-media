@@ -47,6 +47,6 @@ export interface TabsProps {
 export interface TabsEmits {
   (e: 'close', key: string): void
   (e: 'unpin', tab: TabConfig): void
-  (e: 'sort-tabs', sourceKey: string, targetKey: string): void
+  (e: 'sort-tabs', oldIndex: number, newIndex: number): void
   (e: 'update:active', key: string): void
 }

@@ -4,8 +4,9 @@ import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { DoubleLeftOutlined, DoubleRightOutlined } from '@ant-design/icons-vue'
 import TabsChrome from './TabsChrome.vue'
+import { useTabsDrag } from './use-tabs-drag'
 
-interface Props extends TabsProps {}
+interface Props extends TabsProps { }
 
 defineOptions({ name: 'TabsView' })
 
@@ -21,10 +22,15 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   (e: 'close', key: string): void
-  (e: 'sort-tabs', sourceKey: string, targetKey: string): void
+  (e: 'sort-tabs', oldIndex: number, newIndex: number): void
   (e: 'unpin', tab: TabConfig): void
   (e: 'update:active', key: string): void
 }>()
+
+/* 拖拽排序：基于 SortableJS，对齐 vben use-tabs-drag */
+useTabsDrag(props, (oldIndex, newIndex) => {
+  emit('sort-tabs', oldIndex, newIndex)
+})
 
 const active = defineModel<string>('active', { default: '' })
 
@@ -165,61 +171,34 @@ onUnmounted(() => {
 <template>
   <div class="flex h-full flex-1 overflow-hidden">
     <!-- 左侧滚动按钮 -->
-    <span
-      v-show="showScrollButton"
-      :class="{
-        'cursor-pointer text-muted-foreground hover:bg-muted': !scrollIsAtLeft,
-        'pointer-events-none opacity-30': scrollIsAtLeft
-      }"
-      class="border-r border-border px-2 flex items-center"
-      @click="scrollDirection('left')"
-    >
+    <span v-show="showScrollButton" :class="{
+      'cursor-pointer text-muted-foreground hover:bg-muted': !scrollIsAtLeft,
+      'pointer-events-none opacity-30': scrollIsAtLeft
+    }" class="border-r border-border px-2 flex items-center" @click="scrollDirection('left')">
       <DoubleLeftOutlined class="text-sm" />
     </span>
 
-    <div
-      :class="{
-        'pt-0.75': styleType === 'chrome'
-      }"
-      class="size-full flex-1 overflow-hidden"
-    >
-      <div
-        ref="scrollContainerRef"
-        class="tabs-scroll-container h-full overflow-x-auto overflow-y-hidden"
-        @scroll="onScroll"
-        @wheel="handleWheel"
-      >
+    <div :class="{
+      'pt-0.75': styleType === 'chrome'
+    }" class="size-full flex-1 overflow-hidden">
+      <div ref="scrollContainerRef" class="tabs-scroll-container h-full overflow-x-auto overflow-y-hidden"
+        @scroll="onScroll" @wheel="handleWheel">
         <div data-tabs-viewport class="h-full inline-block">
-          <TabsChrome
-            v-model:active="active"
-            :content-class="contentClass"
-            :context-menus="contextMenus"
-            :draggable="draggable"
-            :gap="gap"
-            :middle-click-to-close="middleClickToClose"
-            :show-icon="showIcon"
-            :style-type="styleType"
-            :tabs="tabs"
-            :wheelable="wheelable"
-            @close="(k) => emit('close', k)"
-            @sort-tabs="(s, t) => emit('sort-tabs', s, t)"
-            @unpin="(t) => emit('unpin', t)"
-            @update:active="(k) => emit('update:active', k)"
-          />
+          <TabsChrome v-model:active="active" :content-class="contentClass" :context-menus="contextMenus"
+            :draggable="draggable" :gap="gap" :middle-click-to-close="middleClickToClose" :show-icon="showIcon"
+            :style-type="styleType" :tabs="tabs" :wheelable="wheelable" @close="(k) => emit('close', k)"
+            @sort-tabs="(o, n) => emit('sort-tabs', o, n)" @unpin="(t) => emit('unpin', t)"
+            @update:active="(k) => emit('update:active', k)" />
         </div>
       </div>
     </div>
 
     <!-- 右侧滚动按钮 -->
-    <span
-      v-show="showScrollButton"
-      :class="{
-        'cursor-pointer text-muted-foreground hover:bg-muted': !scrollIsAtRight,
-        'pointer-events-none opacity-30': scrollIsAtRight
-      }"
-      class="cursor-pointer border-l border-border px-2 flex items-center text-muted-foreground hover:bg-muted"
-      @click="scrollDirection('right')"
-    >
+    <span v-show="showScrollButton" :class="{
+      'cursor-pointer text-muted-foreground hover:bg-muted': !scrollIsAtRight,
+      'pointer-events-none opacity-30': scrollIsAtRight
+    }" class="cursor-pointer border-l border-border px-2 flex items-center text-muted-foreground hover:bg-muted"
+      @click="scrollDirection('right')">
       <DoubleRightOutlined class="text-sm" />
     </span>
   </div>

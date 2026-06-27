@@ -175,8 +175,8 @@ function onTabClose(key: string) {
   handleClose(key)
 }
 
-function onSortTabs(sourceKey: string, targetKey: string) {
-  tabsStore.sortTabs(sourceKey, targetKey)
+function onSortTabs(oldIndex: number, newIndex: number) {
+  tabsStore.sortTabs(oldIndex, newIndex)
 }
 
 function onTabUnpin(tab: any) {
