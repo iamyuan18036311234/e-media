@@ -10,7 +10,6 @@ import { setupMock } from '#/api/mock'
 import { setupI18n } from '#/locales'
 import { initPreferences } from '#/preferences/index'
 import { overridesPreferences } from '#/preferences'
-import { router } from '#/router'
 import { initStores } from '#/store'
 
 /** 应用命名空间 */
@@ -22,7 +21,7 @@ async function bootstrap() {
   // 1. 偏好设置（同步至 localStorage）
   await initPreferences({ namespace, overrides: overridesPreferences })
 
-  // 2. 国际化
+  // 2. 国际化（必须在路由之前：路由定义中会调用 $t，需要 messages 已就绪）
   await setupI18n(app)
 
   // 3. 状态管理（Pinia）
@@ -34,7 +33,8 @@ async function bootstrap() {
   // 5. 注册 Mock 处理器（VITE_USE_MOCK=true 时生效）
   setupMock()
 
-  // 6. 路由（守卫内部完成动态路由注册）
+  // 6. 路由（动态加载，确保在 i18n 之后，守卫内部完成动态路由注册）
+  const { router } = await import('#/router')
   app.use(router)
 
   // 7. 全量注册 antd（除表单组件外，message/notification 等也需挂载）

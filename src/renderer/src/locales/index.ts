@@ -1,4 +1,5 @@
 import type { App } from 'vue'
+import type { ComposerTranslation } from 'vue-i18n'
 
 import { ref } from 'vue'
 import { createI18n } from 'vue-i18n'
@@ -35,12 +36,14 @@ function buildLocalesMap() {
     if (!localesMap[lang]) {
       localesMap[lang] = async () => {
         const all = Object.entries(modules).filter(([p]) => p.includes(`/langs/${lang}/`))
-        const merged: Record<string, any> = {}
-        for (const [, l] of all) {
+        const messages: Record<string, any> = {}
+        for (const [p, l] of all) {
+          const fileName = p.match(/\.\/langs\/[^/]+\/(.*)\.json$/)?.[1]
+          if (!fileName) continue
           const mod = (await l()) as Record<string, any>
-          Object.assign(merged, mod.default ?? mod)
+          messages[fileName] = mod.default ?? mod
         }
-        return merged
+        return messages
       }
     }
   }
@@ -112,7 +115,7 @@ export async function setupI18n(app: App) {
 }
 
 /** 翻译函数 */
-export const $t = i18n.global.t
+export const $t: ComposerTranslation = i18n.global.t
 
 /** antd 语言包（响应式） */
 export { antdLocale }
