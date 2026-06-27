@@ -8,9 +8,7 @@ type SortEmit = (oldIndex: number, newIndex: number) => void
 /** 拖拽时找到真正的 tab 元素（带 .group 类的项） */
 function findParentElement(element: HTMLElement) {
   const parentCls = 'group'
-  return element.classList.contains(parentCls)
-    ? element
-    : element.closest(`.${parentCls}`)
+  return element.classList.contains(parentCls) ? element : element.closest(`.${parentCls}`)
 }
 
 /**
@@ -23,9 +21,7 @@ export function useTabsDrag(props: TabsProps, emit: SortEmit) {
   async function initTabsSortable() {
     await nextTick()
 
-    const el = document.querySelectorAll(
-      `.${props.contentClass}`
-    )?.[0] as HTMLElement
+    const el = document.querySelectorAll(`.${props.contentClass}`)?.[0] as HTMLElement
 
     if (!el) {
       console.warn('Element not found for sortable initialization')
@@ -34,16 +30,21 @@ export function useTabsDrag(props: TabsProps, emit: SortEmit) {
 
     const resetElState = async () => {
       el.style.cursor = 'default'
-      el.querySelector('.draggable')?.classList.remove('dragging')
+      // 移除所有 .dragging 残留（防止透明度问题）
+      el.querySelectorAll('.dragging').forEach((node) => {
+        node.classList.remove('dragging')
+      })
     }
 
     // 动态加载 sortablejs（与 vben 一致）
-    const SortableModule: any = await import(
-      'sortablejs/modular/sortable.complete.esm.js'
-    )
+    const SortableModule: any = await import('sortablejs/modular/sortable.complete.esm.js')
     const Sortable = SortableModule?.default || SortableModule
 
     sortableInstance.value = Sortable?.create?.(el, {
+      // 对齐 vben useSortable 默认配置
+      animation: 300,
+      delay: 400,
+      delayOnTouchOnly: true,
       filter: (_evt: any, target: HTMLElement) => {
         const parent = findParentElement(target)
         const draggable = parent?.classList.contains('draggable')
@@ -53,20 +54,21 @@ export function useTabsDrag(props: TabsProps, emit: SortEmit) {
         const { newIndex, oldIndex } = evt
         const { srcElement } = evt?.originalEvent ?? {}
 
+        // 立即移除被拖拽元素的 dragging class
+        evt.item?.classList?.remove('dragging')
+        resetElState()
+
         if (!srcElement) {
-          resetElState()
           return
         }
 
         const srcParent = findParentElement(srcElement)
 
         if (!srcParent) {
-          resetElState()
           return
         }
 
         if (!srcParent.classList.contains('draggable')) {
-          resetElState()
           return
         }
 
@@ -79,7 +81,6 @@ export function useTabsDrag(props: TabsProps, emit: SortEmit) {
         ) {
           emit(oldIndex, newIndex)
         }
-        resetElState()
       },
       onMove(evt: any) {
         const parent = findParentElement(evt.related)
@@ -92,9 +93,10 @@ export function useTabsDrag(props: TabsProps, emit: SortEmit) {
           return false
         }
       },
-      onStart: () => {
+      onStart(evt: any) {
         el.style.cursor = 'grabbing'
-        el.querySelector('.draggable')?.classList.add('dragging')
+        // 精确给被拖拽元素加 dragging class（而非第一个 .draggable）
+        evt.item?.classList?.add('dragging')
       }
     })
   }
