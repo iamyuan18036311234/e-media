@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { MenuRecord } from '#/router/access'
-import { computed, h, reactive, ref, watch } from 'vue'
+import type { ContextMenuItem } from '#/components/tabs'
+import { computed, h, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   BellOutlined,
@@ -32,6 +33,7 @@ import { useTabsStore } from '#/store/tabs'
 import { useUserStore } from '#/store/user'
 import Icon from '#/components/Icon.vue'
 import Updater from '#/components/Updater.vue'
+import { TabsToolMore, TabsToolRefresh, TabsToolScreen, TabsView, useTabbar } from '#/components/tabs'
 
 defineOptions({ name: 'BasicLayout' })
 
@@ -114,8 +116,47 @@ const breadcrumbItems = computed(() => {
     .map((r) => ({ title: String(r.meta!.title), path: r.path }))
 })
 
-/** 多标签 */
-const { tabs } = storeToRefs(tabsStore)
+/** 多标签（对齐 vben-admin tabbar 行为） */
+
+/** 内容最大化状态（隐藏侧边栏/面包屑/通知等） */
+const contentIsMaximize = ref(false)
+function toggleMaximize() {
+  contentIsMaximize.value = !contentIsMaximize.value
+}
+
+/** 刷新当前页（通过 key 强制重新挂载 RouterView） */
+const refreshKey = ref(0)
+function refreshTab() {
+  refreshKey.value++
+}
+
+const {
+  createContextMenus,
+  currentActive,
+  currentTabs,
+  handleClose,
+  handleClick
+} = useTabbar({
+  contentIsMaximize: computed(() => contentIsMaximize.value),
+  refresh: refreshTab,
+  toggleMaximize
+})
+
+/** 右键菜单（响应式构建） */
+const tabbarMenus = computed<ContextMenuItem[]>(() => {
+  const tab = tabsStore.getTabByKey(currentActive.value)
+  return tab ? createContextMenus(tab) : []
+})
+
+/** 工具栏「更多」按钮的菜单（基于当前激活 tab） */
+const moreMenus = computed(() => tabbarMenus.value)
+
+function onMoreMenuClick(key: string) {
+  const item = tabbarMenus.value.find((m) => m.key === key)
+  item?.handler?.()
+}
+
+/** 监听路由变化 → 添加标签 */
 watch(
   () => route.fullPath,
   () => {
@@ -124,18 +165,26 @@ watch(
   { immediate: true }
 )
 
-function onTabClick(fullPath: string) {
-  if (fullPath !== route.fullPath) router.push(fullPath)
+/** 初始化固定标签（从路由表抽取 affixTab 路由） */
+onMounted(() => {
+  tabsStore.setAffixTabs(router.getRoutes() as any)
+})
+
+/** 关闭/取消固定事件转发 */
+function onTabClose(key: string) {
+  handleClose(key)
 }
 
-function onTabClose(fullPath: string, e: MouseEvent) {
-  e.stopPropagation()
-  const idx = tabs.value.findIndex((t) => t.fullPath === fullPath)
-  tabsStore.removeTab(fullPath)
-  if (route.fullPath === fullPath) {
-    const next = tabs.value[idx] || tabs.value[idx - 1] || tabs.value[tabs.value.length - 1]
-    router.push(next ? next.fullPath : preferences.app.name ? '/' : '/')
-  }
+function onSortTabs(sourceKey: string, targetKey: string) {
+  tabsStore.sortTabs(sourceKey, targetKey)
+}
+
+function onTabUnpin(tab: any) {
+  tabsStore.toggleTabPin(tab)
+}
+
+function onTabActiveChange(key: string) {
+  handleClick(key)
 }
 
 /** 用户下拉菜单 */
@@ -170,18 +219,11 @@ function markAllRead() {
 </script>
 
 <template>
-  <Layout class="basic-layout h-screen w-screen overflow-hidden">
+  <Layout class="basic-layout h-screen w-screen overflow-hidden" :class="{ 'is-content-maximize': contentIsMaximize }">
     <!-- 侧边栏（side-nav / mixed-nav 模式） -->
-    <LayoutSider
-      v-if="isSideNav && preferences.sidebar.visible"
-      v-model:collapsed="collapsed"
-      :width="preferences.sidebar.width"
-      :collapsed-width="preferences.sidebar.collapsedWidth"
-      :trigger="null"
-      collapsible
-      class="layout-sider"
-      :class="{ 'sider-collapsed': collapsed }"
-    >
+    <LayoutSider v-if="isSideNav && preferences.sidebar.visible" v-model:collapsed="collapsed"
+      :width="preferences.sidebar.width" :collapsed-width="preferences.sidebar.collapsedWidth" :trigger="null"
+      collapsible class="layout-sider" :class="{ 'sider-collapsed': collapsed }">
       <!-- Logo -->
       <div v-if="preferences.logo.visible" class="logo-wrap">
         <div class="logo-badge">流</div>
@@ -193,37 +235,22 @@ function markAllRead() {
         <template v-for="menu in filteredMenus" :key="menu.path">
           <!-- 有子菜单 -->
           <li v-if="filterChildren(menu.children).length" class="menu-group">
-            <div
-              class="menu-title"
-              :class="{ active: openKeys.includes(menu.path) }"
-              @click="onToggleMenu(menu.path)"
-            >
+            <div class="menu-title" :class="{ active: openKeys.includes(menu.path) }" @click="onToggleMenu(menu.path)">
               <Icon v-if="menu.icon" :icon="menu.icon" :size="16" />
               <span class="menu-text">{{ menu.title || menu.name }}</span>
-              <span class="menu-arrow" :class="{ open: openKeys.includes(menu.path) }"
-                >›</span
-              >
+              <span class="menu-arrow" :class="{ open: openKeys.includes(menu.path) }">›</span>
             </div>
             <ul v-show="openKeys.includes(menu.path)" class="menu-sub">
-              <li
-                v-for="child in filterChildren(menu.children)"
-                :key="child.path"
-                class="menu-item"
-                :class="{ selected: selectedKeys.includes(child.path) }"
-                @click="onMenuClick({ key: child.path })"
-              >
+              <li v-for="child in filterChildren(menu.children)" :key="child.path" class="menu-item"
+                :class="{ selected: selectedKeys.includes(child.path) }" @click="onMenuClick({ key: child.path })">
                 <Icon v-if="child.icon" :icon="child.icon" :size="14" />
                 <span class="menu-text">{{ child.title || child.name }}</span>
               </li>
             </ul>
           </li>
           <!-- 无子菜单 -->
-          <li
-            v-else
-            class="menu-item"
-            :class="{ selected: selectedKeys.includes(menu.path) }"
-            @click="onMenuClick({ key: menu.path })"
-          >
+          <li v-else class="menu-item" :class="{ selected: selectedKeys.includes(menu.path) }"
+            @click="onMenuClick({ key: menu.path })">
             <Icon v-if="menu.icon" :icon="menu.icon" :size="16" />
             <span class="menu-text">{{ menu.title || menu.name }}</span>
           </li>
@@ -249,35 +276,21 @@ function markAllRead() {
           <ul v-if="isTopNav" class="top-menu-custom">
             <template v-for="menu in filteredMenus" :key="menu.path">
               <li v-if="filterChildren(menu.children).length" class="top-menu-group">
-                <div
-                  class="top-menu-title"
-                  :class="{ active: openKeys.includes(menu.path) }"
-                  @click="onToggleMenu(menu.path)"
-                >
+                <div class="top-menu-title" :class="{ active: openKeys.includes(menu.path) }"
+                  @click="onToggleMenu(menu.path)">
                   <Icon v-if="menu.icon" :icon="menu.icon" :size="16" />
                   <span>{{ menu.title || menu.name }}</span>
-                  <span class="menu-arrow" :class="{ open: openKeys.includes(menu.path) }"
-                    >›</span
-                  >
+                  <span class="menu-arrow" :class="{ open: openKeys.includes(menu.path) }">›</span>
                 </div>
                 <ul v-show="openKeys.includes(menu.path)" class="top-menu-sub">
-                  <li
-                    v-for="child in filterChildren(menu.children)"
-                    :key="child.path"
-                    class="top-menu-item"
-                    :class="{ selected: selectedKeys.includes(child.path) }"
-                    @click="onMenuClick({ key: child.path })"
-                  >
+                  <li v-for="child in filterChildren(menu.children)" :key="child.path" class="top-menu-item"
+                    :class="{ selected: selectedKeys.includes(child.path) }" @click="onMenuClick({ key: child.path })">
                     {{ child.title || child.name }}
                   </li>
                 </ul>
               </li>
-              <li
-                v-else
-                class="top-menu-item"
-                :class="{ selected: selectedKeys.includes(menu.path) }"
-                @click="onMenuClick({ key: menu.path })"
-              >
+              <li v-else class="top-menu-item" :class="{ selected: selectedKeys.includes(menu.path) }"
+                @click="onMenuClick({ key: menu.path })">
                 <Icon v-if="menu.icon" :icon="menu.icon" :size="16" />
                 <span>{{ menu.title || menu.name }}</span>
               </li>
@@ -310,12 +323,7 @@ function markAllRead() {
                   <Button type="link" size="small" @click="markAllRead">全部已读</Button>
                 </div>
                 <div class="notif-list">
-                  <div
-                    v-for="n in notifications"
-                    :key="n.id"
-                    class="notif-item"
-                    :class="{ unread: !n.read }"
-                  >
+                  <div v-for="n in notifications" :key="n.id" class="notif-item" :class="{ unread: !n.read }">
                     <div class="notif-title">{{ n.title }}</div>
                     <div class="notif-desc">{{ n.desc }}</div>
                     <div class="notif-time">{{ n.time }}</div>
@@ -339,28 +347,24 @@ function markAllRead() {
 
       <!-- 多标签 -->
       <div v-if="preferences.tabbar.enable" class="tabbar">
-        <div class="tabbar-scroll">
-          <div
-            v-for="tab in tabs"
-            :key="tab.fullPath"
-            class="tab-item"
-            :class="{ active: tab.fullPath === route.fullPath }"
-            @click="onTabClick(tab.fullPath)"
-          >
-            <Icon v-if="tab.icon && preferences.tabbar.showIcon" :icon="tab.icon" :size="14" />
-            <span class="tab-title">{{ tab.title }}</span>
-            <span v-if="!tab.affixTab" class="tab-close" @click="(e) => onTabClose(tab.fullPath, e)"
-              >×</span
-            >
-          </div>
+        <TabsView v-model:active="currentActive" :context-menus="createContextMenus"
+          :draggable="preferences.tabbar.draggable" :middle-click-to-close="preferences.tabbar.middleClickToClose"
+          :show-icon="preferences.tabbar.showIcon" :style-type="preferences.tabbar.styleType" :tabs="currentTabs"
+          :wheelable="preferences.tabbar.wheelable" @close="onTabClose" @sort-tabs="onSortTabs" @unpin="onTabUnpin"
+          @update:active="onTabActiveChange" />
+        <div class="tabbar-tools flex h-full items-center">
+          <TabsToolMore v-if="preferences.tabbar.showMore" :menus="moreMenus" @click="onMoreMenuClick" />
+          <TabsToolRefresh v-if="preferences.tabbar.showRefresh" @refresh="refreshTab" />
+          <TabsToolScreen v-if="preferences.tabbar.showMaximize" :screen="contentIsMaximize" @change="toggleMaximize"
+            @update:screen="toggleMaximize" />
         </div>
       </div>
 
       <!-- 内容区 -->
-      <LayoutContent class="layout-content">
+      <LayoutContent class="layout-content" :class="{ 'is-maximized': contentIsMaximize }">
         <RouterView v-slot="{ Component }">
           <Transition name="fade-slide" mode="out-in">
-            <component :is="Component" />
+            <component :is="Component" :key="refreshKey" />
           </Transition>
         </RouterView>
       </LayoutContent>
@@ -380,6 +384,12 @@ function markAllRead() {
 :global(html.dark) .basic-layout {
   --sider-bg: #1a1a1a;
   --content-bg: #141414;
+}
+
+/* 内容最大化：隐藏侧边栏与顶栏 */
+.basic-layout.is-content-maximize .layout-sider,
+.basic-layout.is-content-maximize .layout-header {
+  display: none !important;
 }
 
 .layout-sider {
@@ -732,66 +742,27 @@ function markAllRead() {
 
 /* Tabbar */
 .tabbar {
+  --primary: v-bind('preferences.theme.colorPrimary');
   height: var(--tabbar-h);
   background: var(--sider-bg);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   display: flex;
-  align-items: center;
-  padding: 0 12px;
+  align-items: stretch;
+  padding: 0;
+  overflow: hidden;
 }
 
-.tabbar-scroll {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  align-items: center;
-  height: 100%;
+.tabbar-tools {
+  flex-shrink: 0;
+  border-left: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.tabbar-scroll::-webkit-scrollbar {
-  height: 4px;
+:global(html.dark) .tabbar {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
-.tab-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  height: 28px;
-  padding: 0 10px;
-  border-radius: 6px;
-  font-size: 13px;
-  white-space: nowrap;
-  cursor: pointer;
-  background: rgba(0, 0, 0, 0.03);
-  transition: all 0.2s;
-}
-
-.tab-item:hover {
-  background: rgba(0, 0, 0, 0.06);
-}
-
-.tab-item.active {
-  background: var(--primary);
-  color: #fff;
-}
-
-.tab-close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  font-size: 14px;
-  line-height: 1;
-}
-
-.tab-item.active .tab-close:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-.tab-item:not(.active) .tab-close:hover {
-  background: rgba(0, 0, 0, 0.12);
+:global(html.dark) .tabbar-tools {
+  border-left-color: rgba(255, 255, 255, 0.08);
 }
 
 /* Content */

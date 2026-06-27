@@ -43,6 +43,20 @@ export interface TabbarPreferences {
   persist: boolean
   /** 是否显示图标 */
   showIcon: boolean
+  /** 标签风格：chrome（浏览器风格）/ plain / card / brisk */
+  styleType: 'brisk' | 'card' | 'chrome' | 'plain'
+  /** 是否允许拖拽排序 */
+  draggable: boolean
+  /** 是否允许滚轮滚动 */
+  wheelable: boolean
+  /** 中键点击关闭 */
+  middleClickToClose: boolean
+  /** 是否显示「更多」下拉 */
+  showMore: boolean
+  /** 是否显示刷新按钮 */
+  showRefresh: boolean
+  /** 是否显示最大化按钮 */
+  showMaximize: boolean
 }
 
 export interface BreadcrumbPreferences {
@@ -92,7 +106,14 @@ const defaultPreferences: Preferences = {
   tabbar: {
     enable: true,
     persist: true,
-    showIcon: true
+    showIcon: true,
+    styleType: 'chrome',
+    draggable: true,
+    wheelable: true,
+    middleClickToClose: true,
+    showMore: true,
+    showRefresh: true,
+    showMaximize: true
   },
   breadcrumb: {
     enable: true
