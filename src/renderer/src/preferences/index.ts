@@ -82,37 +82,78 @@ export interface ThemePreferences {
 }
 
 export interface SidebarPreferences {
-  collapsed: boolean
-  width: number
-  collapsedWidth: number
-  collapsedShowTitle: boolean
-  visible: boolean
+  /** 点击目录时自动激活子菜单 */
   autoActivateChild: boolean
-  expandOnHover: boolean
-  draggable: boolean
+  /** 侧边栏是否折叠 */
+  collapsed: boolean
+  /** 侧边栏折叠按钮是否可见 */
   collapsedButton: boolean
+  /** 侧边栏折叠时，是否显示title */
+  collapsedShowTitle: boolean
+  /** 侧边栏折叠宽度 */
+  collapseWidth: number
+  /** 侧边栏菜单拖拽 */
+  draggable: boolean
+  /** 侧边栏是否可见 */
+  enable: boolean
+  /** 菜单自动展开状态 */
+  expandOnHover: boolean
+  /** 侧边栏扩展区域是否折叠 */
+  extraCollapse: boolean
+  /** 侧边栏扩展区域折叠宽度 */
+  extraCollapsedWidth: number
+  /** 侧边栏固定按钮是否可见 */
   fixedButton: boolean
+  /** 侧边栏是否隐藏 - css */
+  hidden: boolean
+  /** 混合侧边栏宽度 */
+  mixedWidth: number
+  /** 侧边栏宽度 */
+  width: number
 }
 
 export interface HeaderPreferences {
+  /** 顶栏是否启用 */
   enable: boolean
-  mode: LayoutHeaderModeType
+  /** 顶栏高度 */
+  height: number
+  /** 顶栏是否隐藏,css-隐藏 */
+  hidden: boolean
+  /** 顶栏菜单位置 */
   menuAlign: LayoutHeaderMenuAlignType
+  /** header显示模式 */
+  mode: LayoutHeaderModeType
 }
 
 export interface TabbarPreferences {
-  enable: boolean
-  persist: boolean
-  showIcon: boolean
-  styleType: 'brisk' | 'card' | 'chrome' | 'plain'
+  /** 是否开启多标签页拖拽 */
   draggable: boolean
-  wheelable: boolean
-  middleClickToClose: boolean
-  showMore: boolean
-  showRefresh: boolean
-  showMaximize: boolean
-  visitHistory: boolean
+  /** 是否开启多标签页 */
+  enable: boolean
+  /** 标签页高度 */
+  height: number
+  /** 开启标签页缓存功能 */
+  keepAlive: boolean
+  /** 限制最大数量 */
   maxCount: number
+  /** 是否点击中键时关闭标签 */
+  middleClickToClose: boolean
+  /** 是否持久化标签 */
+  persist: boolean
+  /** 是否开启多标签页图标 */
+  showIcon: boolean
+  /** 显示最大化按钮 */
+  showMaximize: boolean
+  /** 显示更多按钮 */
+  showMore: boolean
+  /** 显示刷新按钮 */
+  showRefresh: boolean
+  /** 标签页风格 */
+  styleType: 'brisk' | 'card' | 'chrome' | 'plain'
+  /** 是否开启访问历史记录 */
+  visitHistory: boolean
+  /** 是否开启鼠标滚轮响应 */
+  wheelable: boolean
 }
 
 export interface BreadcrumbPreferences {
@@ -130,22 +171,40 @@ export interface NavigationPreferences {
 }
 
 export interface FooterPreferences {
+  /** 底栏是否可见 */
   enable: boolean
+  /** 底栏是否固定 */
   fixed: boolean
+  /** 底栏高度 */
+  height: number
 }
 
 export interface CopyrightPreferences {
-  settingShow: boolean
-  enable: boolean
+  /** 版权公司名 */
   companyName: string
+  /** 版权公司名链接 */
   companySiteLink: string
+  /** 版权日期 */
   date: string
+  /** 版权是否可见 */
+  enable: boolean
+  /** 备案号 */
   icp: string
+  /** 备案号链接 */
   icpLink: string
+  /** 设置面板是否显示 */
+  settingShow?: boolean
 }
 
 export interface LogoPreferences {
-  visible: boolean
+  /** logo是否可见 */
+  enable: boolean
+  /** logo图片适应方式 */
+  fit: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down'
+  /** logo地址 */
+  source: string
+  /** 暗色主题logo地址 (可选，若不设置则使用 source) */
+  sourceDark?: string
 }
 
 export interface TransitionPreferences {
@@ -156,11 +215,18 @@ export interface TransitionPreferences {
 }
 
 export interface ShortcutKeysPreferences {
+  /** 是否启用快捷键-全局 */
   enable: boolean
+  /** 是否启用全局关闭窗口快捷键 */
+  globalEscape: boolean
+  /** 是否启用全局锁屏快捷键 */
+  globalLockScreen: boolean
+  /** 是否启用全局注销快捷键 */
+  globalLogout: boolean
+  /** 是否启用全局偏好设置快捷键 */
+  globalPreferences: boolean
+  /** 是否启用全局搜索快捷键 */
   globalSearch: boolean
-  logout: boolean
-  lockScreen: boolean
-  escape: boolean
 }
 
 export interface WidgetPreferences {
@@ -212,11 +278,11 @@ const defaultPreferences: Preferences = {
     timezone: 'Asia/Shanghai',
     enableCheckUpdates: true,
     enableCopyPreferences: true,
-    enableStickyPreferencesNavigationBar: false,
+    enableStickyPreferencesNavigationBar: true,
     preferencesButtonPosition: 'auto'
   },
   theme: {
-    mode: 'auto',
+    mode: 'dark',
     colorPrimary: 'hsl(212 100% 45%)',
     builtinType: 'default',
     radius: '0.5',
@@ -226,87 +292,99 @@ const defaultPreferences: Preferences = {
     semiDarkHeader: false
   },
   sidebar: {
-    collapsed: false,
-    width: 230,
-    collapsedWidth: 64,
-    collapsedShowTitle: false,
-    visible: true,
     autoActivateChild: false,
-    expandOnHover: false,
-    draggable: false,
+    collapsed: false,
     collapsedButton: true,
-    fixedButton: false
+    collapsedShowTitle: false,
+    collapseWidth: 60,
+    draggable: true,
+    enable: true,
+    expandOnHover: true,
+    extraCollapse: false,
+    extraCollapsedWidth: 60,
+    fixedButton: true,
+    hidden: false,
+    mixedWidth: 80,
+    width: 224
   },
   header: {
     enable: true,
-    mode: 'fixed',
-    menuAlign: 'start'
+    height: 50,
+    hidden: false,
+    menuAlign: 'start',
+    mode: 'fixed'
   },
   tabbar: {
+    draggable: true,
     enable: true,
+    height: 38,
+    keepAlive: true,
+    maxCount: 0,
+    middleClickToClose: false,
     persist: true,
     showIcon: true,
-    styleType: 'chrome',
-    draggable: true,
-    wheelable: true,
-    middleClickToClose: true,
+    showMaximize: true,
     showMore: true,
     showRefresh: true,
-    showMaximize: true,
-    visitHistory: false,
-    maxCount: 30
+    styleType: 'chrome',
+    visitHistory: true,
+    wheelable: true
   },
   breadcrumb: {
     enable: true,
-    showIcon: true,
+    hideOnlyOne: false,
     showHome: false,
-    styleType: 'normal',
-    hideOnlyOne: false
+    showIcon: true,
+    styleType: 'normal'
   },
   navigation: {
-    styleType: 'rounded',
-    split: false,
-    accordion: false
+    accordion: true,
+    split: true,
+    styleType: 'rounded'
   },
   footer: {
     enable: false,
-    fixed: false
+    fixed: false,
+    height: 32
   },
   copyright: {
-    settingShow: true,
+    companyName: 'Vben',
+    companySiteLink: 'https://www.vben.pro',
+    date: '2024',
     enable: true,
-    companyName: '',
-    companySiteLink: '',
-    date: '',
-    icp: '',
-    icpLink: ''
+    icp: '闽ICP备19024351号',
+    icpLink: 'https://beian.miit.gov.cn/',
+    settingShow: true
   },
   logo: {
-    visible: true
+    enable: true,
+    fit: 'contain',
+    source: 'https://unpkg.com/@vbenjs/static-source@0.1.7/source/logo-v1.webp'
   },
   transition: {
-    progress: false,
-    name: 'fade-slide',
+    enable: true,
     loading: true,
-    enable: true
+    name: 'fade-slide',
+    progress: true
   },
   shortcutKeys: {
     enable: true,
-    globalSearch: true,
-    logout: false,
-    lockScreen: false,
-    escape: true
+    globalEscape: false,
+    globalLockScreen: true,
+    globalLogout: true,
+    globalPreferences: true,
+    globalSearch: true
   },
   widget: {
-    globalSearch: false,
     fullscreen: true,
-    languageToggle: false,
+    globalSearch: true,
+    languageToggle: true,
+    lockScreen: true,
     notification: true,
-    themeToggle: true,
-    sidebarToggle: true,
-    lockScreen: false,
     refresh: true,
-    timezone: false
+    sidebarToggle: true,
+    themeToggle: true,
+    timezone: true
   }
 }
 

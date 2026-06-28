@@ -241,11 +241,11 @@ function openPreferences() {
 <template>
   <Layout class="basic-layout h-screen w-screen overflow-hidden" :class="{ 'is-content-maximize': contentIsMaximize }">
     <!-- 侧边栏（side-nav / mixed-nav 模式） -->
-    <LayoutSider v-if="isSideNav && preferences.sidebar.visible" v-model:collapsed="collapsed"
-      :width="preferences.sidebar.width" :collapsed-width="preferences.sidebar.collapsedWidth" :trigger="null"
+    <LayoutSider v-if="isSideNav && preferences.sidebar.enable" v-model:collapsed="collapsed"
+      :width="preferences.sidebar.width" :collapsed-width="preferences.sidebar.collapseWidth" :trigger="null"
       collapsible class="layout-sider" :class="{ 'sider-collapsed': collapsed }">
       <!-- Logo -->
-      <div v-if="preferences.logo.visible" class="logo-wrap">
+      <div v-if="preferences.logo.enable" class="logo-wrap">
         <div class="logo-badge">流</div>
         <span v-show="!collapsed" class="logo-text">流光视频</span>
       </div>

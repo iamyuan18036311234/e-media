@@ -17,7 +17,8 @@ import {
   clearCache,
   preferences,
   resetPreferences,
-  updatePreferences
+  updatePreferences,
+  usePreferences
 } from '#/preferences'
 import type {
   BreadcrumbStyleType,
@@ -68,24 +69,30 @@ const themePresets = [
   { icon: SunMoon, name: 'auto', label: '跟随系统' }
 ] as const
 
-/* ============ 内置主题预设（对齐 web-antd BUILT_IN_THEME_PRESETS 顺序） ============ */
-const builtinThemePresets: Array<{ type: BuiltinThemeType; label: string; color: string }> = [
-  { type: 'default', label: '默认', color: '#1677ff' },
-  { type: 'violet', label: '紫色', color: '#722ed1' },
-  { type: 'pink', label: '粉色', color: '#eb2f96' },
-  { type: 'rose', label: '玫红', color: '#f43f5e' },
-  { type: 'sky-blue', label: '天蓝', color: '#0ea5e9' },
-  { type: 'deep-blue', label: '深蓝', color: '#1e3a8a' },
-  { type: 'green', label: '绿色', color: '#16a34a' },
-  { type: 'deep-green', label: '深绿', color: '#14532d' },
-  { type: 'orange', label: '橙色', color: '#f97316' },
-  { type: 'yellow', label: '黄色', color: '#eab308' },
-  { type: 'neutral', label: '中性', color: '#737373' },
-  { type: 'slate', label: '青灰', color: '#475569' },
-  { type: 'zinc', label: '锌色', color: '#52525b' },
-  { type: 'gray', label: '灰色', color: '#6b7280' },
-  { type: 'custom', label: '自定义', color: '#8b4c3b' }
-]
+/* ============ 内置主题预设（完全对齐 web-antd BUILT_IN_THEME_PRESETS 顺序与 color/primaryColor/darkPrimaryColor） ============ */
+const builtinThemePresets: Array<{
+  type: BuiltinThemeType
+  label: string
+  color: string
+  darkPrimaryColor?: string
+  primaryColor?: string
+}> = [
+    { type: 'default', label: '默认', color: 'hsl(212 100% 45%)' },
+    { type: 'violet', label: '紫色', color: 'hsl(245 82% 67%)' },
+    { type: 'pink', label: '粉色', color: 'hsl(347 77% 60%)' },
+    { type: 'yellow', label: '黄色', color: 'hsl(42 84% 61%)' },
+    { type: 'sky-blue', label: '天蓝', color: 'hsl(231 98% 65%)' },
+    { type: 'green', label: '绿色', color: 'hsl(161 90% 43%)' },
+    { type: 'zinc', label: '锌色', color: 'hsl(240 5% 26%)', darkPrimaryColor: 'hsl(0 0% 98%)', primaryColor: 'hsl(240 5.9% 10%)' },
+    { type: 'deep-green', label: '深绿', color: 'hsl(181 84% 32%)' },
+    { type: 'deep-blue', label: '深蓝', color: 'hsl(211 91% 39%)' },
+    { type: 'orange', label: '橙色', color: 'hsl(18 89% 40%)' },
+    { type: 'rose', label: '玫红', color: 'hsl(0 75% 42%)' },
+    { type: 'neutral', label: '中性', color: 'hsl(0 0% 25%)', darkPrimaryColor: 'hsl(0 0% 98%)', primaryColor: 'hsl(240 5.9% 10%)' },
+    { type: 'slate', label: '青灰', color: 'hsl(215 25% 27%)', darkPrimaryColor: 'hsl(0 0% 98%)', primaryColor: 'hsl(240 5.9% 10%)' },
+    { type: 'gray', label: '灰色', color: 'hsl(217 19% 27%)', darkPrimaryColor: 'hsl(0 0% 98%)', primaryColor: 'hsl(240 5.9% 10%)' },
+    { type: 'custom', label: '自定义', color: '' }
+  ]
 
 /** 颜色选择器 ref（用于自定义主题色触发） */
 const colorInputRef = ref<HTMLInputElement | null>(null)
@@ -305,10 +312,28 @@ function handleClearCache() {
   message.success('已清空缓存')
 }
 
-/** 选择内置主题 */
+/** 选择内置主题（对齐 web-antd handleSelect：仅设置 builtinType，由 watch 联动 colorPrimary） */
 function handleBuiltinThemeSelect(theme: { type: BuiltinThemeType; color: string }) {
-  updatePreferences({ theme: { builtinType: theme.type, colorPrimary: theme.color } })
+  updatePreferences({ theme: { builtinType: theme.type } })
 }
+
+/* ============ isDark（对齐 web-antd usePreferences isDark） ============ */
+const { isDark } = usePreferences()
+
+/* ============ 内置主题色联动（对齐 web-antd builtin.vue watch） ============ */
+watch(
+  () => [preferences.theme.builtinType, isDark.value] as [BuiltinThemeType, boolean],
+  ([themeType, dark]) => {
+    const theme = builtinThemePresets.find((item) => item.type === themeType)
+    if (theme) {
+      const primaryColor = dark
+        ? theme.darkPrimaryColor || theme.primaryColor
+        : theme.primaryColor
+      updatePreferences({ theme: { colorPrimary: primaryColor || theme.color } })
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
@@ -477,47 +502,47 @@ function handleBuiltinThemeSelect(theme: { type: BuiltinThemeType; color: string
           <h3 class="pref-block-title">侧边栏</h3>
           <div class="pref-switch-row">
             <span class="pref-switch-label">显示侧边栏</span>
-            <Switch :checked="preferences.sidebar.visible" :disabled="!isSideMode"
-              @update:checked="(v: any) => updatePreferences({ sidebar: { visible: v } })" />
+            <Switch :checked="preferences.sidebar.enable" :disabled="!isSideMode"
+              @update:checked="(v: any) => updatePreferences({ sidebar: { enable: v } })" />
           </div>
           <div class="pref-switch-row">
             <span class="pref-switch-label">可拖拽</span>
-            <Switch :checked="preferences.sidebar.draggable" :disabled="!preferences.sidebar.visible || !isSideMode"
+            <Switch :checked="preferences.sidebar.draggable" :disabled="!preferences.sidebar.enable || !isSideMode"
               @update:checked="(v: any) => updatePreferences({ sidebar: { draggable: v } })" />
           </div>
           <div class="pref-switch-row">
             <span class="pref-switch-label">折叠</span>
-            <Switch :checked="preferences.sidebar.collapsed" :disabled="!preferences.sidebar.visible || !isSideMode"
+            <Switch :checked="preferences.sidebar.collapsed" :disabled="!preferences.sidebar.enable || !isSideMode"
               @update:checked="(v: any) => updatePreferences({ sidebar: { collapsed: v } })" />
           </div>
           <div class="pref-switch-row">
             <span class="pref-switch-label">悬停展开</span>
             <Switch :checked="preferences.sidebar.expandOnHover"
-              :disabled="!preferences.sidebar.visible || !isSideMode || !preferences.sidebar.collapsed"
+              :disabled="!preferences.sidebar.enable || !isSideMode || !preferences.sidebar.collapsed"
               @update:checked="(v: any) => updatePreferences({ sidebar: { expandOnHover: v } })" />
           </div>
           <div class="pref-switch-row">
             <span class="pref-switch-label">折叠显示标题</span>
             <Switch :checked="preferences.sidebar.collapsedShowTitle"
-              :disabled="!preferences.sidebar.visible || !isSideMode || !preferences.sidebar.collapsed"
+              :disabled="!preferences.sidebar.enable || !isSideMode || !preferences.sidebar.collapsed"
               @update:checked="(v: any) => updatePreferences({ sidebar: { collapsedShowTitle: v } })" />
           </div>
           <div class="pref-switch-row">
             <span class="pref-switch-label">自动激活子菜单</span>
             <Switch :checked="preferences.sidebar.autoActivateChild"
-              :disabled="!preferences.sidebar.visible || !['sidebar-mixed-nav', 'mixed-nav', 'header-mixed-nav'].includes(preferences.app.layout) || !isSideMode"
+              :disabled="!preferences.sidebar.enable || !['sidebar-mixed-nav', 'mixed-nav', 'header-mixed-nav'].includes(preferences.app.layout) || !isSideMode"
               @update:checked="(v: any) => updatePreferences({ sidebar: { autoActivateChild: v } })" />
           </div>
           <div class="pref-checkbox-row">
             <span class="pref-switch-label">侧边栏按钮</span>
             <div class="sidebar-btn-group">
               <button type="button" class="sidebar-btn-toggle" :class="{ active: sidebarButtons.includes('collapsed') }"
-                :disabled="!preferences.sidebar.visible || !isSideMode"
+                :disabled="!preferences.sidebar.enable || !isSideMode"
                 @click="sidebarButtons = toggleSidebarBtn('collapsed')">
                 折叠
               </button>
               <button type="button" class="sidebar-btn-toggle" :class="{ active: sidebarButtons.includes('fixed') }"
-                :disabled="!preferences.sidebar.visible || !isSideMode"
+                :disabled="!preferences.sidebar.enable || !isSideMode"
                 @click="sidebarButtons = toggleSidebarBtn('fixed')">
                 固定
               </button>
@@ -526,7 +551,7 @@ function handleBuiltinThemeSelect(theme: { type: BuiltinThemeType; color: string
           <div class="pref-number-row">
             <span class="pref-switch-label">宽度</span>
             <InputNumber :value="preferences.sidebar.width" :min="160" :max="320" :step="10" size="small"
-              :disabled="!preferences.sidebar.visible || !isSideMode"
+              :disabled="!preferences.sidebar.enable || !isSideMode"
               @update:value="(v: any) => updatePreferences({ sidebar: { width: Number(v) || 230 } })" />
           </div>
         </section>
@@ -809,20 +834,27 @@ function handleBuiltinThemeSelect(theme: { type: BuiltinThemeType; color: string
           <div class="pref-shortcut-row">
             <span class="pref-switch-label">退出登录</span>
             <span class="pref-shortcut-key">Alt Q</span>
-            <Switch :checked="preferences.shortcutKeys.logout" :disabled="!preferences.shortcutKeys.enable" size="small"
-              @update:checked="(v: any) => updatePreferences({ shortcutKeys: { logout: v } })" />
+            <Switch :checked="preferences.shortcutKeys.globalLogout" :disabled="!preferences.shortcutKeys.enable"
+              size="small" @update:checked="(v: any) => updatePreferences({ shortcutKeys: { globalLogout: v } })" />
           </div>
           <div class="pref-shortcut-row">
             <span class="pref-switch-label">锁屏</span>
             <span class="pref-shortcut-key">Alt L</span>
-            <Switch :checked="preferences.shortcutKeys.lockScreen" :disabled="!preferences.shortcutKeys.enable"
-              size="small" @update:checked="(v: any) => updatePreferences({ shortcutKeys: { lockScreen: v } })" />
+            <Switch :checked="preferences.shortcutKeys.globalLockScreen" :disabled="!preferences.shortcutKeys.enable"
+              size="small" @update:checked="(v: any) => updatePreferences({ shortcutKeys: { globalLockScreen: v } })" />
           </div>
           <div class="pref-shortcut-row">
             <span class="pref-switch-label">退出</span>
             <span class="pref-shortcut-key">Esc</span>
-            <Switch :checked="preferences.shortcutKeys.escape" :disabled="!preferences.shortcutKeys.enable" size="small"
-              @update:checked="(v: any) => updatePreferences({ shortcutKeys: { escape: v } })" />
+            <Switch :checked="preferences.shortcutKeys.globalEscape" :disabled="!preferences.shortcutKeys.enable"
+              size="small" @update:checked="(v: any) => updatePreferences({ shortcutKeys: { globalEscape: v } })" />
+          </div>
+          <div class="pref-shortcut-row">
+            <span class="pref-switch-label">偏好设置</span>
+            <span class="pref-shortcut-key">Alt P</span>
+            <Switch :checked="preferences.shortcutKeys.globalPreferences" :disabled="!preferences.shortcutKeys.enable"
+              size="small"
+              @update:checked="(v: any) => updatePreferences({ shortcutKeys: { globalPreferences: v } })" />
           </div>
         </section>
       </template>

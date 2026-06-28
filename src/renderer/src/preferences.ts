@@ -20,26 +20,6 @@ export type { Preferences } from '#/preferences/index'
 export const overridesPreferences = defineOverridesPreferences({
   app: {
     name: import.meta.env.VITE_APP_TITLE,
-    defaultAvatar: 'https://avatar.vercel.sh/lx-video.svg',
-    dynamicTitle: true,
-    watermark: false,
-    layout: 'sidebar-nav'
-  },
-  theme: {
-    mode: 'light',
-    colorPrimary: '#8b4c3b'
-  },
-  sidebar: {
-    collapsed: false,
-    width: 230
-  },
-  tabbar: {
-    enable: true
-  },
-  breadcrumb: {
-    enable: true
-  },
-  logo: {
-    visible: true
+    defaultAvatar: 'https://avatar.vercel.sh/lx-video.svg'
   }
 })
