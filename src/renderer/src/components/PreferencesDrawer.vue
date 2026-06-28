@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
-import { CheckOutlined, CopyOutlined, ReloadOutlined } from '@ant-design/icons-vue'
+import { computed, ref, watch } from 'vue'
+import { CopyOutlined, ReloadOutlined } from '@ant-design/icons-vue'
 import {
   Button,
   Drawer,
@@ -111,13 +111,7 @@ function handleCustomColorInput(e: Event) {
   updatePreferences({ theme: { colorPrimary: target.value, builtinType: 'custom' } })
 }
 
-/* ============ 主题色预设 ============ */
-const colorPresets = [
-  '#8b4c3b', '#1677ff', '#00b96b', '#722ed1',
-  '#eb2f96', '#fa8c16', '#13c2c2', '#f5222d'
-]
-
-/* ============ 圆角预设 ============ */
+/* ============ 圆角预设（对齐 web-antd radius.vue） ============ */
 const radiusItems = [
   { label: '0', value: '0' },
   { label: '0.25', value: '0.25' },
@@ -225,7 +219,19 @@ const isMixedNav = computed(() => preferences.app.layout === 'mixed-nav')
 const isSideNav = computed(() => preferences.app.layout === 'sidebar-nav')
 const isSideMixedNav = computed(() => preferences.app.layout === 'sidebar-mixed-nav')
 const isHeaderSidebarNav = computed(() => preferences.app.layout === 'header-sidebar-nav')
+const isHeaderMixedNav = computed(() => preferences.app.layout === 'header-mixed-nav')
 const isSideMode = computed(() => !isFullContent.value && !isHeaderNav.value)
+
+/* ============ 主题侧边栏联动（对齐 web-antd theme.vue watch） ============ */
+// 关闭深色侧边栏时，同步关闭深色次级侧边栏
+watch(
+  () => preferences.theme.semiDarkSidebar,
+  (val) => {
+    if (!val) {
+      updatePreferences({ theme: { semiDarkSidebarSub: false } })
+    }
+  }
+)
 
 const showBreadcrumbConfig = computed(() => {
   return (
@@ -298,11 +304,6 @@ function handleClearCache() {
   message.success('已清空缓存')
 }
 
-/** 主题色更新 */
-function handleColorChange(color: string) {
-  updatePreferences({ theme: { colorPrimary: color, builtinType: 'custom' } })
-}
-
 /** 选择内置主题 */
 function handleBuiltinThemeSelect(theme: { type: BuiltinThemeType; color: string }) {
   updatePreferences({ theme: { builtinType: theme.type, colorPrimary: theme.color } })
@@ -360,7 +361,7 @@ function handleBuiltinThemeSelect(theme: { type: BuiltinThemeType; color: string
           <div class="pref-switch-row">
             <span class="pref-switch-label">深色次级侧边栏</span>
             <Switch :checked="preferences.theme.semiDarkSidebarSub"
-              :disabled="preferences.theme.mode === 'dark' || (!isSideMixedNav && !isMixedNav) || !preferences.theme.semiDarkSidebar"
+              :disabled="preferences.theme.mode === 'dark' || (!isSideMixedNav && !isHeaderMixedNav) || !preferences.theme.semiDarkSidebar"
               @update:checked="(v: any) => updatePreferences({ theme: { semiDarkSidebarSub: v } })" />
           </div>
           <div class="pref-switch-row">
@@ -389,13 +390,6 @@ function handleBuiltinThemeSelect(theme: { type: BuiltinThemeType; color: string
                 </template>
               </div>
               <div class="builtin-theme-label">{{ theme.label }}</div>
-            </div>
-          </div>
-          <!-- 自定义主题色 -->
-          <div class="color-presets">
-            <div v-for="color in colorPresets" :key="color" class="color-preset-item" :style="{ background: color }"
-              :class="{ active: preferences.theme.colorPrimary === color }" @click="handleColorChange(color)">
-              <CheckOutlined v-if="preferences.theme.colorPrimary === color" class="color-check" />
             </div>
           </div>
         </section>
@@ -1115,38 +1109,6 @@ function handleBuiltinThemeSelect(theme: { type: BuiltinThemeType; color: string
   margin-top: 6px;
   font-size: 12px;
   color: hsl(var(--muted-foreground));
-}
-
-/* ============ 主题色预设 ============ */
-.color-presets {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.color-preset-item {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.color-preset-item:hover {
-  transform: scale(1.1);
-}
-
-.color-preset-item.active {
-  box-shadow: 0 0 0 2px hsl(var(--popover)), 0 0 0 4px hsl(var(--foreground) / 0.3);
-}
-
-.color-check {
-  color: #fff;
-  font-size: 12px;
 }
 
 /* ============ 布局预设 ============ */
