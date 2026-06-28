@@ -3,12 +3,17 @@ import type { MenuRecord } from '#/router/access'
 import type { ContextMenuItem } from '#/components/tabs'
 import { computed, h, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useFullscreen } from '@vueuse/core'
 import {
   BellOutlined,
+  BulbFilled,
   BulbOutlined,
+  CompressOutlined,
+  ExpandOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  ReloadOutlined,
   SettingOutlined,
   UserOutlined
 } from '@ant-design/icons-vue'
@@ -126,9 +131,15 @@ function toggleMaximize() {
 
 /** 刷新当前页（通过 key 强制重新挂载 RouterView） */
 const refreshKey = ref(0)
+const isRefreshing = ref(false)
 function refreshTab() {
+  isRefreshing.value = true
   refreshKey.value++
+  setTimeout(() => (isRefreshing.value = false), 600)
 }
+
+/** 全屏切换（对齐 web-antd VbenFullScreen） */
+const { isFullscreen, toggle: toggleFullscreen } = useFullscreen()
 
 const {
   createContextMenus,
@@ -262,9 +273,17 @@ function markAllRead() {
       <!-- 顶部 -->
       <LayoutHeader class="layout-header">
         <div class="header-left">
-          <Button type="text" class="collapse-trigger" @click="toggleCollapse">
-            <component :is="collapsed ? MenuUnfoldOutlined : MenuFoldOutlined" />
-          </Button>
+          <Tooltip :title="collapsed ? '展开侧边栏' : '折叠侧边栏'" placement="bottom">
+            <button class="header-icon-btn" type="button" aria-label="切换侧边栏" @click="toggleCollapse">
+              <component :is="collapsed ? MenuUnfoldOutlined : MenuFoldOutlined" />
+            </button>
+          </Tooltip>
+
+          <Tooltip title="刷新" placement="bottom">
+            <button class="header-icon-btn" type="button" aria-label="刷新" @click="refreshTab">
+              <ReloadOutlined :spin="isRefreshing" />
+            </button>
+          </Tooltip>
 
           <Breadcrumb v-if="preferences.breadcrumb.enable && !isMobile" class="header-breadcrumb">
             <BreadcrumbItem v-for="(b, i) in breadcrumbItems" :key="i">
@@ -299,22 +318,38 @@ function markAllRead() {
         </div>
 
         <div class="header-right">
-          <!-- 主题切换 -->
-          <Tooltip :title="isDark ? '切换为亮色' : '切换为暗色'">
-            <Button type="text" class="header-btn" @click="toggleTheme">
-              <BulbOutlined />
-            </Button>
+          <!-- 偏好设置 -->
+          <Tooltip title="偏好设置" placement="bottom">
+            <button class="header-icon-btn" type="button" aria-label="偏好设置" @click="router.push('/preferences')">
+              <SettingOutlined />
+            </button>
           </Tooltip>
 
-          <!-- 增量更新 -->
+          <!-- 主题切换（对齐 web-antd ThemeToggle：亮色用 BulbOutlined，暗色用 BulbFilled） -->
+          <Tooltip :title="isDark ? '切换为亮色' : '切换为暗色'" placement="bottom">
+            <button class="header-icon-btn" type="button" aria-label="切换主题" @click="toggleTheme">
+              <BulbFilled v-if="!isDark" />
+              <BulbOutlined v-else />
+            </button>
+          </Tooltip>
+
+          <!-- 全屏切换（对齐 web-antd VbenFullScreen） -->
+          <Tooltip :title="isFullscreen ? '退出全屏' : '全屏'" placement="bottom">
+            <button class="header-icon-btn" type="button" aria-label="全屏切换" @click="toggleFullscreen">
+              <CompressOutlined v-if="isFullscreen" />
+              <ExpandOutlined v-else />
+            </button>
+          </Tooltip>
+
+          <!-- 检查更新（Electron 增量更新入口） -->
           <Updater />
 
           <!-- 通知 -->
           <Dropdown placement="bottomRight">
             <Badge :count="unreadCount" :offset="[-2, 4]">
-              <Button type="text" class="header-btn">
+              <button class="header-icon-btn" type="button" aria-label="通知">
                 <BellOutlined />
-              </Button>
+              </button>
             </Badge>
             <template #overlay>
               <div class="notif-panel">
@@ -347,11 +382,10 @@ function markAllRead() {
 
       <!-- 多标签 -->
       <div v-if="preferences.tabbar.enable" class="tabbar">
-        <TabsView :active="currentActive" :context-menus="createContextMenus"
-          :draggable="preferences.tabbar.draggable" :middle-click-to-close="preferences.tabbar.middleClickToClose"
-          :show-icon="preferences.tabbar.showIcon" :style-type="preferences.tabbar.styleType" :tabs="currentTabs"
-          :wheelable="preferences.tabbar.wheelable" @close="onTabClose" @sort-tabs="onSortTabs" @unpin="onTabUnpin"
-          @update:active="onTabActiveChange" />
+        <TabsView :active="currentActive" :context-menus="createContextMenus" :draggable="preferences.tabbar.draggable"
+          :middle-click-to-close="preferences.tabbar.middleClickToClose" :show-icon="preferences.tabbar.showIcon"
+          :style-type="preferences.tabbar.styleType" :tabs="currentTabs" :wheelable="preferences.tabbar.wheelable"
+          @close="onTabClose" @sort-tabs="onSortTabs" @unpin="onTabUnpin" @update:active="onTabActiveChange" />
         <div class="tabbar-tools flex h-full items-center">
           <TabsToolMore v-if="preferences.tabbar.showMore" :menus="moreMenus" @click="onMoreMenuClick" />
           <TabsToolRefresh v-if="preferences.tabbar.showRefresh" @refresh="refreshTab" />
@@ -556,17 +590,47 @@ function markAllRead() {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 4px;
   flex: 1;
   min-width: 0;
 }
 
-.collapse-trigger {
-  font-size: 18px;
+/* 头部图标按钮 - 对齐 web-antd VbenIconButton 风格 */
+.header-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.75);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.header-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.95);
+}
+
+:global(html.dark) .header-icon-btn {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+:global(html.dark) .header-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .header-breadcrumb {
   font-size: 14px;
+  margin-left: 4px;
 }
 
 /* 自定义顶部菜单 */
@@ -661,14 +725,7 @@ function markAllRead() {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.header-btn {
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  gap: 4px;
 }
 
 .user-trigger {
@@ -679,6 +736,7 @@ function markAllRead() {
   padding: 0 8px;
   border-radius: 6px;
   height: 40px;
+  margin-left: 4px;
 }
 
 .user-trigger:hover {

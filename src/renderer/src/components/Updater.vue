@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { Button, Progress, Tag } from 'ant-design-vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { Badge, Button, Popover, Progress, Tag } from 'ant-design-vue'
+import { SyncOutlined } from '@ant-design/icons-vue'
 import { preferences } from '#/preferences'
 
 // 浏览器环境（非 Electron）下 window.api 不存在，需安全降级
@@ -17,7 +18,7 @@ const currentVersion = ref('')
 // 状态
 const checking = ref(false)
 const error = ref('')
-const showPanel = ref(false)
+const open = ref(false)
 
 // 更新状态
 const updateAvailable = ref(false)
@@ -32,6 +33,9 @@ let cleanupNotAvailable: (() => void) | null = null
 let cleanupProgress: (() => void) | null = null
 let cleanupDownloaded: (() => void) | null = null
 let cleanupError: (() => void) | null = null
+
+/** 是否显示更新红点 */
+const showDot = computed(() => updateAvailable.value && !downloaded.value)
 
 /** 检查更新 */
 async function handleCheck(): Promise<void> {
@@ -66,11 +70,6 @@ async function handleInstall(): Promise<void> {
   await updater.installUpdate()
 }
 
-/** 关闭面板 */
-function handleClose(): void {
-  showPanel.value = false
-}
-
 onMounted(async () => {
   // 浏览器环境下无 updater API，跳过
   if (!updater || !getVersion) {
@@ -85,7 +84,7 @@ onMounted(async () => {
   cleanupAvailable = updater.onUpdateAvailable((info) => {
     updateAvailable.value = true
     updateInfo.value = info
-    showPanel.value = true
+    open.value = true
   })
   cleanupNotAvailable = updater.onUpdateNotAvailable(() => {
     error.value = '当前已是最新版本'
@@ -118,63 +117,108 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="updater-container">
-    <!-- 当前版本号 + 检查更新按钮 -->
-    <div class="updater-buttons">
-      <Tag color="default" class="version-tag">v{{ currentVersion }}</Tag>
-      <Button size="small" :loading="checking" @click="handleCheck">检查更新</Button>
-    </div>
-
-    <!-- 错误提示 -->
-    <p v-if="error && !showPanel" class="updater-error">{{ error }}</p>
-
-    <!-- 更新面板 -->
-    <div v-if="showPanel" class="updater-panel">
-      <div class="updater-panel-header">
-        <span class="updater-title">
-          发现新版本
-          <strong v-if="updateInfo">{{ updateInfo.version }}</strong>
-        </span>
-        <button class="updater-close" @click="handleClose">✕</button>
+  <Popover
+    v-model:open="open"
+    trigger="click"
+    placement="bottomRight"
+    overlay-class-name="updater-popover"
+  >
+    <template #title>
+      <div class="updater-popover-title">
+        <span>检查更新</span>
+        <Tag color="default" class="version-tag">v{{ currentVersion }}</Tag>
       </div>
-
-      <div class="updater-panel-body">
-        <!-- 下载中 -->
-        <div v-if="downloading" class="updater-downloading">
-          <Progress :percent="progress" :stroke-color="primaryColor" />
-        </div>
-
-        <!-- 下载完成 -->
-        <div v-else-if="downloaded" class="updater-downloaded">
-          <p>更新下载完成！</p>
-          <Button type="primary" @click="handleInstall">退出并安装</Button>
-        </div>
-
-        <!-- 下载前 -->
-        <div v-else>
-          <Button type="primary" @click="handleDownload">下载更新</Button>
-        </div>
-
-        <div v-if="updateInfo?.releaseNotes" class="updater-changelog">
-          <div class="updater-changelog-title">更新日志：</div>
-          <div class="updater-changelog-body">{{ updateInfo.releaseNotes }}</div>
-        </div>
-
+    </template>
+    <template #content>
+      <div class="updater-popover-body">
+        <!-- 错误提示 -->
         <p v-if="error" class="updater-error">{{ error }}</p>
+
+        <!-- 发现新版本 -->
+        <template v-if="updateAvailable">
+          <div class="updater-update-info">
+            <span class="updater-update-label">发现新版本</span>
+            <strong v-if="updateInfo" class="updater-update-version">{{ updateInfo.version }}</strong>
+          </div>
+
+          <!-- 下载中 -->
+          <div v-if="downloading" class="updater-downloading">
+            <Progress :percent="progress" :stroke-color="primaryColor" size="small" />
+          </div>
+
+          <!-- 下载完成 -->
+          <div v-else-if="downloaded" class="updater-downloaded">
+            <p class="updater-downloaded-text">更新下载完成！</p>
+            <Button type="primary" size="small" @click="handleInstall">退出并安装</Button>
+          </div>
+
+          <!-- 下载前 -->
+          <div v-else class="updater-actions">
+            <Button type="primary" size="small" @click="handleDownload">下载更新</Button>
+          </div>
+
+          <!-- 更新日志 -->
+          <div v-if="updateInfo?.releaseNotes" class="updater-changelog">
+            <div class="updater-changelog-title">更新日志：</div>
+            <div class="updater-changelog-body">{{ updateInfo.releaseNotes }}</div>
+          </div>
+        </template>
+
+        <!-- 无更新 -->
+        <template v-else>
+          <p class="updater-tip">点击下方按钮检查是否有新版本</p>
+          <Button size="small" :loading="checking" @click="handleCheck">检查更新</Button>
+        </template>
       </div>
-    </div>
-  </div>
+    </template>
+
+    <Badge :dot="showDot" :offset="[-2, 4]">
+      <button class="header-icon-btn" type="button" aria-label="检查更新">
+        <SyncOutlined :spin="checking || downloading" />
+      </button>
+    </Badge>
+  </Popover>
 </template>
 
 <style scoped>
-.updater-container {
-  display: inline-block;
+/* 头部图标按钮 - 对齐 web-antd VbenIconButton 风格 */
+.header-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.75);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.updater-buttons {
+.header-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.95);
+}
+
+:global(html.dark) .header-icon-btn {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+:global(html.dark) .header-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* Popover 标题 */
+.updater-popover-title {
   display: flex;
-  gap: 8px;
   align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .version-tag {
@@ -182,95 +226,81 @@ onUnmounted(() => {
   font-size: 12px;
 }
 
-.updater-panel {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  width: 420px;
-  max-height: 80vh;
-  overflow-y: auto;
-  background: var(--panel-bg, #fff);
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  z-index: 9999;
+/* Popover 内容 */
+.updater-popover-body {
+  width: 280px;
 }
 
-.updater-panel-header {
+.updater-error {
+  color: #ff4d4f;
+  font-size: 13px;
+  margin: 0 0 8px;
+}
+
+.updater-tip {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.55);
+  margin: 0 0 8px;
+}
+
+.updater-update-info {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  background: var(--primary, #8b4c3b);
-  color: #fff;
-  border-radius: 10px 10px 0 0;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 13px;
 }
 
-.updater-title {
-  font-size: 14px;
-}
-
-.updater-title strong {
-  margin-left: 6px;
-}
-
-.updater-close {
-  background: none;
-  border: none;
-  color: #fff;
-  cursor: pointer;
-  font-size: 16px;
-  padding: 0;
-  line-height: 1;
-  opacity: 0.85;
-}
-
-.updater-close:hover {
-  opacity: 1;
-}
-
-.updater-panel-body {
-  padding: 16px;
-  color: var(--text-color, #333);
+.updater-update-version {
+  color: var(--primary, #8b4c3b);
 }
 
 .updater-downloading {
-  text-align: center;
+  margin: 8px 0;
 }
 
 .updater-downloaded {
   text-align: center;
 }
 
-.updater-downloaded p {
-  margin: 0 0 12px;
+.updater-downloaded-text {
+  margin: 0 0 8px;
   color: var(--primary, #8b4c3b);
   font-weight: 500;
+  font-size: 13px;
+}
+
+.updater-actions {
+  margin-top: 4px;
 }
 
 .updater-changelog {
-  margin-top: 12px;
-  padding-top: 12px;
+  margin-top: 10px;
+  padding-top: 10px;
   border-top: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .updater-changelog-title {
   font-weight: 600;
-  font-size: 13px;
-  margin-bottom: 6px;
+  font-size: 12px;
+  margin-bottom: 4px;
 }
 
 .updater-changelog-body {
-  font-size: 13px;
+  font-size: 12px;
   color: rgba(0, 0, 0, 0.55);
   white-space: pre-wrap;
-  max-height: 150px;
+  max-height: 120px;
   overflow-y: auto;
   line-height: 1.5;
 }
 
-.updater-error {
-  color: #ff4d4f;
-  font-size: 13px;
-  margin: 8px 0 0;
+:global(html.dark) .updater-tip,
+:global(html.dark) .updater-changelog-body {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+:global(html.dark) .updater-changelog {
+  border-top-color: rgba(255, 255, 255, 0.1);
 }
 </style>
