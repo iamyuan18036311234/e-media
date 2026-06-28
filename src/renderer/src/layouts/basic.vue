@@ -5,21 +5,22 @@ import { computed, h, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useFullscreen } from '@vueuse/core'
 import {
-  BellOutlined,
-  BulbFilled,
-  BulbOutlined,
-  CompressOutlined,
-  ExpandOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  ReloadOutlined,
-  SettingOutlined,
   UserOutlined
 } from '@ant-design/icons-vue'
 import {
+  Bell,
+  Maximize,
+  Minimize,
+  MoonStar,
+  RotateCw,
+  Settings,
+  Sun
+} from 'lucide-vue-next'
+import {
   Avatar,
-  Badge,
   Breadcrumb,
   BreadcrumbItem,
   Button,
@@ -201,7 +202,7 @@ function onTabActiveChange(key: string) {
 /** 用户下拉菜单 */
 const userMenu = [
   { key: 'profile', icon: () => h(UserOutlined), label: '个人中心' },
-  { key: 'preferences', icon: () => h(SettingOutlined), label: '偏好设置' },
+  { key: 'preferences', icon: () => h(Settings), label: '偏好设置' },
   { type: 'divider' as const },
   { key: 'logout', icon: () => h(LogoutOutlined), label: '退出登录', danger: true }
 ]
@@ -224,6 +225,7 @@ const notifications = reactive([
   { id: 3, title: '布局对齐完成', desc: '参照 vben web-antd 完成', read: true, time: '5分钟前' }
 ])
 const unreadCount = computed(() => notifications.filter((n) => !n.read).length)
+const showDot = computed(() => unreadCount.value > 0)
 function markAllRead() {
   notifications.forEach((n) => (n.read = true))
 }
@@ -280,8 +282,8 @@ function markAllRead() {
           </Tooltip>
 
           <Tooltip title="刷新" placement="bottom">
-            <button class="header-icon-btn" type="button" aria-label="刷新" @click="refreshTab">
-              <ReloadOutlined :spin="isRefreshing" />
+            <button class="header-icon-btn header-icon-btn--refresh" type="button" aria-label="刷新" @click="refreshTab">
+              <RotateCw class="header-icon-svg" :class="{ 'animate-spin': isRefreshing }" />
             </button>
           </Tooltip>
 
@@ -318,39 +320,44 @@ function markAllRead() {
         </div>
 
         <div class="header-right">
-          <!-- 偏好设置 -->
+          <!-- 偏好设置（对齐 web-antd PreferencesButton：Settings 图标 + mr-1） -->
           <Tooltip title="偏好设置" placement="bottom">
-            <button class="header-icon-btn" type="button" aria-label="偏好设置" @click="router.push('/preferences')">
-              <SettingOutlined />
+            <button class="header-icon-btn header-icon-btn--mr1" type="button" aria-label="偏好设置"
+              @click="router.push('/preferences')">
+              <Settings class="header-icon-svg" />
             </button>
           </Tooltip>
 
-          <!-- 主题切换（对齐 web-antd ThemeToggle：亮色用 BulbOutlined，暗色用 BulbFilled） -->
+          <!-- 主题切换（对齐 web-antd ThemeToggle：Sun / MoonStar + mr-1） -->
           <Tooltip :title="isDark ? '切换为亮色' : '切换为暗色'" placement="bottom">
-            <button class="header-icon-btn" type="button" aria-label="切换主题" @click="toggleTheme">
-              <BulbFilled v-if="!isDark" />
-              <BulbOutlined v-else />
+            <button class="header-icon-btn header-icon-btn--mr1" type="button" aria-label="切换主题" @click="toggleTheme">
+              <Sun v-if="!isDark" class="header-icon-svg" />
+              <MoonStar v-else class="header-icon-svg" />
             </button>
           </Tooltip>
 
-          <!-- 全屏切换（对齐 web-antd VbenFullScreen） -->
+          <!-- 全屏切换（对齐 web-antd VbenFullScreen：Maximize / Minimize + mr-1） -->
           <Tooltip :title="isFullscreen ? '退出全屏' : '全屏'" placement="bottom">
-            <button class="header-icon-btn" type="button" aria-label="全屏切换" @click="toggleFullscreen">
-              <CompressOutlined v-if="isFullscreen" />
-              <ExpandOutlined v-else />
+            <button class="header-icon-btn header-icon-btn--mr1" type="button" aria-label="全屏切换"
+              @click="toggleFullscreen">
+              <Minimize v-if="isFullscreen" class="header-icon-svg" />
+              <Maximize v-else class="header-icon-svg" />
             </button>
           </Tooltip>
 
-          <!-- 检查更新（Electron 增量更新入口） -->
-          <Updater />
+          <!-- 检查更新（Electron 增量更新入口，mr-1） -->
+          <div class="header-icon-btn--mr1">
+            <Updater />
+          </div>
 
-          <!-- 通知 -->
+          <!-- 通知（对齐 web-antd Notification：Bell + 圆点 dot + mr-2） -->
           <Dropdown placement="bottomRight">
-            <Badge :count="unreadCount" :offset="[-2, 4]">
-              <button class="header-icon-btn" type="button" aria-label="通知">
-                <BellOutlined />
+            <div class="header-icon-wrap header-icon-wrap--mr2" @click.stop>
+              <button class="header-icon-btn header-icon-btn--relative" type="button" aria-label="通知">
+                <span v-if="showDot" class="notif-dot"></span>
+                <Bell class="header-icon-svg" />
               </button>
-            </Badge>
+            </div>
             <template #overlay>
               <div class="notif-panel">
                 <div class="notif-header">
@@ -368,7 +375,7 @@ function markAllRead() {
             </template>
           </Dropdown>
 
-          <!-- 用户下拉 -->
+          <!-- 用户下拉（对齐 web-antd UserDropdown：rounded-full p-1.5 + mr-2 ml-1） -->
           <Dropdown placement="bottomRight" :menu="{ items: userMenu, onClick: onUserMenuClick }">
             <div class="user-trigger">
               <Avatar :size="32" :src="userInfo?.avatar">
@@ -409,7 +416,7 @@ function markAllRead() {
 <style scoped>
 .basic-layout {
   --primary: v-bind('preferences.theme.colorPrimary');
-  --header-h: 56px;
+  --header-h: 50px;
   --tabbar-h: 38px;
 }
 
@@ -572,17 +579,17 @@ function markAllRead() {
   min-width: 0;
 }
 
-/* 头部图标按钮 - 对齐 web-antd VbenIconButton 风格 */
+/* 头部图标按钮 - 对齐 web-antd VbenIconButton（h-8 w-8 rounded-full ghost） */
 .header-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   margin: 0;
   border: none;
-  border-radius: 6px;
+  border-radius: 9999px;
   background: transparent;
   color: hsl(var(--foreground));
   font-size: 16px;
@@ -594,6 +601,48 @@ function markAllRead() {
 .header-icon-btn:hover {
   background: hsl(var(--accent));
   color: hsl(var(--accent-foreground));
+}
+
+/* 刷新按钮：web-antd header.vue 中用 rounded-md 覆盖 rounded-full */
+.header-icon-btn--refresh {
+  border-radius: 6px;
+}
+
+/* lucide 图标尺寸：对齐 web-antd size-4 (16px) */
+.header-icon-svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* 间距工具类：对齐 web-antd mr-1 (4px) / mr-2 (8px) */
+.header-icon-btn--mr1 {
+  margin-right: 4px;
+}
+
+.header-icon-btn--relative {
+  position: relative;
+}
+
+.header-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.header-icon-wrap--mr2 {
+  margin-right: 8px;
+}
+
+/* 通知圆点：对齐 web-antd notification.vue dot（size-2 rounded-sm bg-primary） */
+.notif-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--primary);
 }
 
 .header-breadcrumb {
@@ -683,18 +732,20 @@ function markAllRead() {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 4px;
+  height: 100%;
 }
 
+/* 用户下拉触发器：对齐 web-antd user-dropdown.vue（mr-2 ml-1 rounded-full p-1.5 hover:bg-accent） */
 .user-trigger {
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  padding: 0 8px;
-  border-radius: 6px;
-  height: 40px;
+  padding: 6px;
+  border-radius: 9999px;
+  margin-right: 8px;
   margin-left: 4px;
+  transition: all 0.2s;
 }
 
 .user-trigger:hover {

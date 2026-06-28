@@ -176,17 +176,17 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* 头部图标按钮 - 对齐 web-antd VbenIconButton 风格 */
+/* 头部图标按钮 - 对齐 web-antd VbenIconButton（h-8 w-8 rounded-full ghost） */
 .header-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   margin: 0;
   border: none;
-  border-radius: 6px;
+  border-radius: 9999px;
   background: transparent;
   color: hsl(var(--foreground));
   font-size: 16px;
