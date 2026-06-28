@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue'
-import { CopyOutlined, ReloadOutlined } from '@ant-design/icons-vue'
+import { CopyOutlined, ReloadOutlined, QuestionCircleOutlined } from '@ant-design/icons-vue'
+import LayoutIcon from './LayoutIcons.vue'
 import {
   Button,
   Drawer,
@@ -120,15 +121,15 @@ const radiusItems = [
   { label: '1', value: '1' }
 ]
 
-/* ============ 布局模式预设（对齐 web-antd layout.vue 顺序） ============ */
+/* ============ 布局模式预设（对齐 web-antd layout.vue 顺序与 tip） ============ */
 const layoutPresets: Array<{ name: string; type: LayoutType; tip: string }> = [
-  { name: '垂直', type: 'sidebar-nav', tip: '所有菜单显示在左侧' },
-  { name: '双列', type: 'sidebar-mixed-nav', tip: '双列菜单布局' },
-  { name: '水平', type: 'header-nav', tip: '所有菜单显示在顶部' },
-  { name: '头部+侧边', type: 'header-sidebar-nav', tip: '头部和侧边导航' },
-  { name: '混合菜单', type: 'mixed-nav', tip: '菜单混合布局' },
+  { name: '垂直', type: 'sidebar-nav', tip: '所有菜单全部显示在左侧' },
+  { name: '双列', type: 'sidebar-mixed-nav', tip: '双列菜单布局，主菜单在左侧，子菜单在右侧' },
+  { name: '水平', type: 'header-nav', tip: '所有菜单全部显示在顶部' },
+  { name: '头部+侧边', type: 'header-sidebar-nav', tip: '头部菜单与侧边栏混合布局' },
+  { name: '混合菜单', type: 'mixed-nav', tip: '菜单混合布局，顶部和左侧都有菜单' },
   { name: '头部双列', type: 'header-mixed-nav', tip: '头部双列菜单布局' },
-  { name: '全内容', type: 'full-content', tip: '无菜单，全内容区域' }
+  { name: '全内容', type: 'full-content', tip: '没有菜单，只有内容区域' }
 ]
 
 /* ============ 内容紧凑模式 ============ */
@@ -442,7 +443,15 @@ function handleBuiltinThemeSelect(theme: { type: BuiltinThemeType; color: string
             <div v-for="layout in layoutPresets" :key="layout.type" class="layout-preset-item"
               :class="{ active: preferences.app.layout === layout.type }"
               @click="updatePreferences({ app: { layout: layout.type } })">
-              <div class="layout-preset-name">{{ layout.name }}</div>
+              <div class="layout-preset-box">
+                <LayoutIcon :type="layout.type" />
+              </div>
+              <div class="layout-preset-label">
+                {{ layout.name }}
+                <Tooltip v-if="layout.tip" :title="layout.tip">
+                  <QuestionCircleOutlined class="layout-preset-tip" />
+                </Tooltip>
+              </div>
             </div>
           </div>
         </section>
@@ -454,7 +463,10 @@ function handleBuiltinThemeSelect(theme: { type: BuiltinThemeType; color: string
             <div v-for="item in contentCompactPresets" :key="item.type" class="layout-preset-item"
               :class="{ active: preferences.app.contentCompact === item.type }"
               @click="updatePreferences({ app: { contentCompact: item.type } })">
-              <div class="layout-preset-name">{{ item.name }}</div>
+              <div class="layout-preset-box">
+                <LayoutIcon :type="`content-${item.type}` as any" />
+              </div>
+              <div class="layout-preset-label">{{ item.name }}</div>
             </div>
           </div>
         </section>
@@ -1111,38 +1123,65 @@ function handleBuiltinThemeSelect(theme: { type: BuiltinThemeType; color: string
   color: hsl(var(--muted-foreground));
 }
 
-/* ============ 布局预设 ============ */
+/* ============ 布局预设（对齐 web-antd outline-box，一行3个） ============ */
 .layout-presets {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px;
 }
 
 .layout-preset-item {
-  flex: 1;
-  min-width: 80px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  height: 36px;
-  padding: 0 12px;
-  border-radius: 6px;
-  border: 1px solid hsl(var(--border));
-  background: transparent;
-  color: hsl(var(--foreground));
-  font-size: 13px;
+  flex: 0 0 calc((100% - 24px) / 3);
+  max-width: calc((100% - 24px) / 3);
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.layout-preset-item:hover {
+.layout-preset-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 4px;
+  border-radius: 6px;
+  border: 1px solid hsl(var(--border));
+  transition: all 0.2s;
+}
+
+.layout-preset-item:hover .layout-preset-box {
   background: hsl(var(--accent));
 }
 
-.layout-preset-item.active {
+.layout-preset-item.active .layout-preset-box {
   border-color: var(--primary);
-  background: hsl(var(--primary) / 0.1);
-  color: var(--primary);
+}
+
+.layout-preset-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  text-align: center;
+}
+
+.layout-preset-item:hover .layout-preset-label {
+  color: hsl(var(--foreground));
+}
+
+.layout-preset-tip {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  cursor: help;
+}
+
+/* 兼容旧样式 */
+.layout-preset-name {
+  font-size: 12px;
 }
 
 /* ============ Toggle Group ============ */
