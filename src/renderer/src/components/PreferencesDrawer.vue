@@ -313,7 +313,8 @@ function handleBuiltinThemeSelect(theme: { type: BuiltinThemeType; color: string
 
 <template>
   <Drawer v-model:open="drawerOpen" title="偏好设置" description="系统偏好设置，实时预览效果" placement="right" :width="380"
-    :body-style="{ padding: 0 }" class="preferences-drawer">
+    :body-style="{ padding: 0 }" :root-style="{ '--primary': preferences.theme.colorPrimary }"
+    class="preferences-drawer">
     <!-- 顶部额外操作（对齐 web-antd extra: 重置 + 吸顶） -->
     <template #extra>
       <div class="drawer-extra">
@@ -1411,28 +1412,25 @@ function handleBuiltinThemeSelect(theme: { type: BuiltinThemeType; color: string
   height: 40px;
   border-radius: 6px;
   background: var(--primary);
-}
-
-/* 动画预览（hover 时触发，对应 web-antd 的 ${item}-slow 类） */
-.transition-preset-box:hover .transition-preset-anim {
-  animation-duration: 1.2s;
+  /* 动画预览（对应 web-antd 的 ${item}-slow 类，常驻播放） */
+  animation-duration: 1.5s;
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
 }
 
-.transition-preset-box:hover .anim-fade {
+.anim-fade {
   animation-name: transition-fade;
 }
 
-.transition-preset-box:hover .anim-fade-slide {
+.anim-fade-slide {
   animation-name: transition-fade-slide;
 }
 
-.transition-preset-box:hover .anim-fade-up {
+.anim-fade-up {
   animation-name: transition-fade-up;
 }
 
-.transition-preset-box:hover .anim-fade-down {
+.anim-fade-down {
   animation-name: transition-fade-down;
 }
 
