@@ -891,9 +891,9 @@ function handleBuiltinThemeSelect(theme: { type: BuiltinThemeType; color: string
           </div>
           <div v-if="preferences.transition.enable" class="transition-presets">
             <div v-for="item in transitionPresets" :key="item" class="transition-preset-box"
-              :class="{ active: preferences.transition.name === item }"
+              :class="{ 'outline-box-active': preferences.transition.name === item }"
               @click="updatePreferences({ transition: { name: item } })">
-              <div class="transition-preset-anim" :class="`anim-${item}`"></div>
+              <div class="transition-preset-anim" :class="`${item}-slow`"></div>
             </div>
           </div>
         </section>
@@ -1379,113 +1379,44 @@ function handleBuiltinThemeSelect(theme: { type: BuiltinThemeType; color: string
   white-space: nowrap;
 }
 
-/* ============ 动画预设 ============ */
+/* ============ 动画预览框（完全对齐 web-antd animation.vue + outline-box） ============ */
 .transition-presets {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 8px 8px 0;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  margin-bottom: 8px;
+  padding: 0 8px;
 }
 
-/* ============ 动画预览框（对齐 web-antd animation.vue outline-box） ============ */
+/* 对齐 web-antd 的 .outline-box 类（tailwind-config/theme.css） */
 .transition-preset-box {
-  display: inline-flex;
+  position: relative;
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
+  padding: 4px;
   border-radius: 6px;
-  border: 1px solid hsl(var(--border));
+  outline: 1px solid hsl(var(--border));
+  outline-offset: 0px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .transition-preset-box:hover {
-  background: hsl(var(--accent));
+  outline-color: var(--primary);
 }
 
-.transition-preset-box.active {
-  border-color: var(--primary);
+.transition-preset-box.outline-box-active {
+  outline: 2px solid var(--primary);
 }
 
+/* 对齐 web-antd：h-10 w-12 rounded-md bg-primary */
 .transition-preset-anim {
   width: 48px;
   height: 40px;
   border-radius: 6px;
   background: var(--primary);
-  /* 动画预览（对应 web-antd 的 ${item}-slow 类，常驻播放） */
-  animation-duration: 1.5s;
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
-}
-
-.anim-fade {
-  animation-name: transition-fade;
-}
-
-.anim-fade-slide {
-  animation-name: transition-fade-slide;
-}
-
-.anim-fade-up {
-  animation-name: transition-fade-up;
-}
-
-.anim-fade-down {
-  animation-name: transition-fade-down;
-}
-
-@keyframes transition-fade {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.2;
-  }
-}
-
-@keyframes transition-fade-slide {
-
-  0%,
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  50% {
-    opacity: 0.2;
-    transform: translateX(12px);
-  }
-}
-
-@keyframes transition-fade-up {
-
-  0%,
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  50% {
-    opacity: 0.2;
-    transform: translateY(-8px);
-  }
-}
-
-@keyframes transition-fade-down {
-
-  0%,
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  50% {
-    opacity: 0.2;
-    transform: translateY(8px);
-  }
 }
 
 /* ============ 底部操作 ============ */

@@ -166,19 +166,4 @@ const appName = computed(() => preferences.app.name)
   align-items: center;
   justify-content: center;
 }
-
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition: all 0.2s ease;
-}
-
-.fade-slide-enter-from {
-  opacity: 0;
-  transform: translateY(8px);
-}
-
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translateY(-8px);
-}
 </style>

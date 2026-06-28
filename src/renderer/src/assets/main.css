@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import './design-tokens.css';
 @import './base.css';
+@import './transition.css';
 
 /* Dark mode uses .dark class selector, not prefers-color-scheme
  * 对齐 web-antd 的 internal/tailwind-config/src/theme.css

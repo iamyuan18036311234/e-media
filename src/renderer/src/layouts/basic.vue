@@ -411,9 +411,10 @@ function openPreferences() {
       <!-- 内容区 -->
       <LayoutContent class="layout-content" :class="{ 'is-maximized': contentIsMaximize }">
         <RouterView v-slot="{ Component }">
-          <Transition name="fade-slide" mode="out-in">
+          <Transition v-if="preferences.transition.enable" :name="preferences.transition.name" appear mode="out-in">
             <component :is="Component" :key="refreshKey" />
           </Transition>
+          <component v-else :is="Component" :key="refreshKey" />
         </RouterView>
       </LayoutContent>
     </Layout>
@@ -839,21 +840,5 @@ function openPreferences() {
   background: hsl(var(--background-deep)) !important;
   overflow: auto;
   padding: 14px;
-}
-
-/* 过渡动画 */
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition: all 0.2s ease;
-}
-
-.fade-slide-enter-from {
-  opacity: 0;
-  transform: translateY(8px);
-}
-
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translateY(-8px);
 }
 </style>
