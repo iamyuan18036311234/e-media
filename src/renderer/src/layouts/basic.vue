@@ -38,6 +38,7 @@ import { useAuthStore } from '#/store/auth'
 import { useTabsStore } from '#/store/tabs'
 import { useUserStore } from '#/store/user'
 import Icon from '#/components/Icon.vue'
+import PreferencesDrawer from '#/components/PreferencesDrawer.vue'
 import Updater from '#/components/Updater.vue'
 import { TabsToolMore, TabsToolRefresh, TabsToolScreen, TabsView, useTabbar } from '#/components/tabs'
 
@@ -229,6 +230,12 @@ const showDot = computed(() => unreadCount.value > 0)
 function markAllRead() {
   notifications.forEach((n) => (n.read = true))
 }
+
+/** 偏好设置抽屉开关 */
+const preferencesOpen = ref(false)
+function openPreferences() {
+  preferencesOpen.value = true
+}
 </script>
 
 <template>
@@ -323,7 +330,7 @@ function markAllRead() {
           <!-- 偏好设置（对齐 web-antd PreferencesButton：Settings 图标 + mr-1） -->
           <Tooltip title="偏好设置" placement="bottom">
             <button class="header-icon-btn header-icon-btn--mr1" type="button" aria-label="偏好设置"
-              @click="router.push('/preferences')">
+              @click="openPreferences">
               <Settings class="header-icon-svg" />
             </button>
           </Tooltip>
@@ -410,6 +417,9 @@ function markAllRead() {
         </RouterView>
       </LayoutContent>
     </Layout>
+
+    <!-- 偏好设置抽屉（对齐 web-antd PreferencesDrawer） -->
+    <PreferencesDrawer v-model:open="preferencesOpen" />
   </Layout>
 </template>
 

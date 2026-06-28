@@ -214,6 +214,24 @@ export function updatePreferences(updates: DeepPartial<Preferences>): void {
   mergeDeep(preferences, updates)
 }
 
+/** 重置偏好设置为默认值 */
+export function resetPreferences(): void {
+  Object.assign(preferences, structuredClone(defaultPreferences))
+}
+
+/** 清空本地缓存 */
+export function clearCache(): void {
+  try {
+    Object.keys(localStorage).forEach((key) => {
+      if (key.endsWith('-preferences')) {
+        localStorage.removeItem(key)
+      }
+    })
+  } catch {
+    // ignore
+  }
+}
+
 /** 系统暗色模式媒体查询 */
 const mediaQuery =
   typeof window !== 'undefined' ? window.matchMedia('(prefers-color-scheme: dark)') : null

@@ -2,9 +2,11 @@ import { defineOverridesPreferences } from '#/preferences/index'
 
 // 透传 preferences 引擎的所有导出，使 `#/preferences` 同时可用
 export {
+  clearCache,
   initPreferences,
   preferences,
   preferencesInitialized,
+  resetPreferences,
   updatePreferences,
   usePreferences
 } from '#/preferences/index'
