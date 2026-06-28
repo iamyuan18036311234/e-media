@@ -23,7 +23,7 @@ export const overridesPreferences = defineOverridesPreferences({
     defaultAvatar: 'https://avatar.vercel.sh/lx-video.svg',
     dynamicTitle: true,
     watermark: false,
-    layout: 'side-nav'
+    layout: 'sidebar-nav'
   },
   theme: {
     mode: 'light',

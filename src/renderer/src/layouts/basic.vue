@@ -56,8 +56,8 @@ const { accessMenus } = storeToRefs(accessStore)
 /** 用户信息（安全访问，避免 null 报错） */
 const userInfo = computed(() => userStore.userInfo)
 
-/** 布局模式 */
-const isTopNav = computed(() => preferences.app.layout === 'top-nav')
+/** 布局模式（对齐 web-antd LayoutType） */
+const isTopNav = computed(() => preferences.app.layout === 'header-nav')
 const isSideNav = computed(() => !isTopNav.value)
 
 /** 侧边栏折叠 */

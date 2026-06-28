@@ -1,107 +1,246 @@
 import { computed, reactive, ref, watch, watchEffect } from 'vue'
 
-/** 偏好设置类型定义（参考 vben preferences 简化版） */
+/** 偏好设置类型定义（对齐 web-antd @vben/preferences） */
+
+/** 布局类型 */
+export type LayoutType =
+  | 'full-content'
+  | 'header-mixed-nav'
+  | 'header-nav'
+  | 'header-sidebar-nav'
+  | 'mixed-nav'
+  | 'sidebar-mixed-nav'
+  | 'sidebar-nav'
+
+/** 主题模式 */
+export type ThemeModeType = 'auto' | 'dark' | 'light'
+
+/** 内置主题类型 */
+export type BuiltinThemeType =
+  | 'custom'
+  | 'deep-blue'
+  | 'deep-green'
+  | 'default'
+  | 'gray'
+  | 'green'
+  | 'neutral'
+  | 'orange'
+  | 'pink'
+  | 'rose'
+  | 'sky-blue'
+  | 'slate'
+  | 'violet'
+  | 'yellow'
+  | 'zinc'
+
+/** 内容紧凑模式 */
+export type ContentCompactType = 'compact' | 'wide'
+
+/** 头部模式 */
+export type LayoutHeaderModeType = 'auto' | 'auto-scroll' | 'fixed' | 'static'
+
+/** 头部菜单对齐 */
+export type LayoutHeaderMenuAlignType = 'center' | 'end' | 'start'
+
+/** 导航风格 */
+export type NavigationStyleType = 'plain' | 'rounded'
+
+/** 面包屑风格 */
+export type BreadcrumbStyleType = 'background' | 'normal'
+
+/** 偏好设置按钮位置 */
+export type PreferencesButtonPositionType = 'auto' | 'fixed' | 'header' | 'user-dropdown'
+
 export interface AppPreferences {
-  /** 应用名称 */
   name: string
-  /** 默认头像 */
   defaultAvatar: string
-  /** 动态标题 */
   dynamicTitle: boolean
-  /** 是否启用水印 */
   watermark: boolean
-  /** 紧凑模式 */
+  watermarkContent: string
   compact: boolean
-  /** 布局模式：side-mix-nav / top-nav / side-nav */
-  layout: 'mixed-nav' | 'side-nav' | 'top-nav'
+  layout: LayoutType
+  contentCompact: ContentCompactType
+  colorGrayMode: boolean
+  colorWeakMode: boolean
+  locale: string
+  timezone: string
+  enableCheckUpdates: boolean
+  enableCopyPreferences: boolean
+  enableStickyPreferencesNavigationBar: boolean
+  preferencesButtonPosition: PreferencesButtonPositionType
 }
 
 export interface ThemePreferences {
-  /** 主题模式：auto | dark | light */
-  mode: 'auto' | 'dark' | 'light'
-  /** 主题色 */
+  mode: ThemeModeType
   colorPrimary: string
-  /** 半透明背景 */
+  builtinType: BuiltinThemeType
+  radius: string
+  fontSize: number
   semiDarkSidebar: boolean
+  semiDarkSidebarSub: boolean
+  semiDarkHeader: boolean
 }
 
 export interface SidebarPreferences {
-  /** 是否折叠 */
   collapsed: boolean
-  /** 宽度 */
   width: number
-  /** 折叠宽度 */
   collapsedWidth: number
-  /** 是否显示 */
+  collapsedShowTitle: boolean
   visible: boolean
+  autoActivateChild: boolean
+  expandOnHover: boolean
+  draggable: boolean
+  collapsedButton: boolean
+  fixedButton: boolean
+}
+
+export interface HeaderPreferences {
+  enable: boolean
+  mode: LayoutHeaderModeType
+  menuAlign: LayoutHeaderMenuAlignType
 }
 
 export interface TabbarPreferences {
-  /** 是否开启多标签 */
   enable: boolean
-  /** 是否持久化 */
   persist: boolean
-  /** 是否显示图标 */
   showIcon: boolean
-  /** 标签风格：chrome（浏览器风格）/ plain / card / brisk */
   styleType: 'brisk' | 'card' | 'chrome' | 'plain'
-  /** 是否允许拖拽排序 */
   draggable: boolean
-  /** 是否允许滚轮滚动 */
   wheelable: boolean
-  /** 中键点击关闭 */
   middleClickToClose: boolean
-  /** 是否显示「更多」下拉 */
   showMore: boolean
-  /** 是否显示刷新按钮 */
   showRefresh: boolean
-  /** 是否显示最大化按钮 */
   showMaximize: boolean
+  visitHistory: boolean
+  maxCount: number
 }
 
 export interface BreadcrumbPreferences {
-  /** 是否开启面包屑 */
   enable: boolean
+  showIcon: boolean
+  showHome: boolean
+  styleType: BreadcrumbStyleType
+  hideOnlyOne: boolean
+}
+
+export interface NavigationPreferences {
+  styleType: NavigationStyleType
+  split: boolean
+  accordion: boolean
+}
+
+export interface FooterPreferences {
+  enable: boolean
+  fixed: boolean
+}
+
+export interface CopyrightPreferences {
+  settingShow: boolean
+  enable: boolean
+  companyName: string
+  companySiteLink: string
+  date: string
+  icp: string
+  icpLink: string
 }
 
 export interface LogoPreferences {
-  /** 是否显示 Logo */
   visible: boolean
+}
+
+export interface TransitionPreferences {
+  progress: boolean
+  name: string
+  loading: boolean
+  enable: boolean
+}
+
+export interface ShortcutKeysPreferences {
+  enable: boolean
+  globalSearch: boolean
+  logout: boolean
+  lockScreen: boolean
+  escape: boolean
+}
+
+export interface WidgetPreferences {
+  globalSearch: boolean
+  fullscreen: boolean
+  languageToggle: boolean
+  notification: boolean
+  themeToggle: boolean
+  sidebarToggle: boolean
+  lockScreen: boolean
+  refresh: boolean
+  timezone: boolean
 }
 
 export interface Preferences {
   app: AppPreferences
   theme: ThemePreferences
   sidebar: SidebarPreferences
+  header: HeaderPreferences
   tabbar: TabbarPreferences
   breadcrumb: BreadcrumbPreferences
+  navigation: NavigationPreferences
+  footer: FooterPreferences
+  copyright: CopyrightPreferences
   logo: LogoPreferences
+  transition: TransitionPreferences
+  shortcutKeys: ShortcutKeysPreferences
+  widget: WidgetPreferences
 }
 
 export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P]
 }
 
-/** 默认偏好设置 */
+/** 默认偏好设置（对齐 web-antd defaults） */
 const defaultPreferences: Preferences = {
   app: {
     name: 'Vben Admin',
     defaultAvatar: 'https://avatar.vercel.sh/vben.svg',
     dynamicTitle: true,
     watermark: false,
+    watermarkContent: '',
     compact: false,
-    layout: 'side-nav'
+    layout: 'sidebar-nav',
+    contentCompact: 'wide',
+    colorGrayMode: false,
+    colorWeakMode: false,
+    locale: 'zh-CN',
+    timezone: 'Asia/Shanghai',
+    enableCheckUpdates: true,
+    enableCopyPreferences: true,
+    enableStickyPreferencesNavigationBar: false,
+    preferencesButtonPosition: 'auto'
   },
   theme: {
     mode: 'auto',
     colorPrimary: 'hsl(212 100% 45%)',
-    semiDarkSidebar: false
+    builtinType: 'default',
+    radius: '0.5',
+    fontSize: 16,
+    semiDarkSidebar: false,
+    semiDarkSidebarSub: false,
+    semiDarkHeader: false
   },
   sidebar: {
     collapsed: false,
     width: 230,
     collapsedWidth: 64,
-    visible: true
+    collapsedShowTitle: false,
+    visible: true,
+    autoActivateChild: false,
+    expandOnHover: false,
+    draggable: false,
+    collapsedButton: true,
+    fixedButton: false
+  },
+  header: {
+    enable: true,
+    mode: 'fixed',
+    menuAlign: 'start'
   },
   tabbar: {
     enable: true,
@@ -113,13 +252,61 @@ const defaultPreferences: Preferences = {
     middleClickToClose: true,
     showMore: true,
     showRefresh: true,
-    showMaximize: true
+    showMaximize: true,
+    visitHistory: false,
+    maxCount: 30
   },
   breadcrumb: {
-    enable: true
+    enable: true,
+    showIcon: true,
+    showHome: false,
+    styleType: 'normal',
+    hideOnlyOne: false
+  },
+  navigation: {
+    styleType: 'rounded',
+    split: false,
+    accordion: false
+  },
+  footer: {
+    enable: false,
+    fixed: false
+  },
+  copyright: {
+    settingShow: true,
+    enable: true,
+    companyName: '',
+    companySiteLink: '',
+    date: '',
+    icp: '',
+    icpLink: ''
   },
   logo: {
     visible: true
+  },
+  transition: {
+    progress: false,
+    name: 'fade-slide',
+    loading: true,
+    enable: true
+  },
+  shortcutKeys: {
+    enable: true,
+    globalSearch: true,
+    logout: false,
+    lockScreen: false,
+    escape: true
+  },
+  widget: {
+    globalSearch: false,
+    fullscreen: true,
+    languageToggle: false,
+    notification: true,
+    themeToggle: true,
+    sidebarToggle: true,
+    lockScreen: false,
+    refresh: true,
+    timezone: false
   }
 }
 
