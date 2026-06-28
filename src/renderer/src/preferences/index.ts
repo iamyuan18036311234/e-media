@@ -1,4 +1,4 @@
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch, watchEffect } from 'vue'
 
 /** 偏好设置类型定义（参考 vben preferences 简化版） */
 export interface AppPreferences {
@@ -196,6 +196,15 @@ export async function initPreferences(options: {
     },
     { deep: true }
   )
+
+  // 同步 .dark 类到 <html>，对齐 web-antd 的 updateCSSVariables 逻辑
+  // 让 :global(html.dark) 与 antd darkAlgorithm 同时生效
+  watchEffect(() => {
+    if (typeof document === 'undefined') return
+    const dark =
+      preferences.theme.mode === 'auto' ? isSystemDark.value : preferences.theme.mode === 'dark'
+    document.documentElement.classList.toggle('dark', dark)
+  })
 
   initialized = true
 }

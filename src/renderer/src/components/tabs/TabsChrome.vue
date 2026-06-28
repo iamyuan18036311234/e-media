@@ -155,13 +155,8 @@ function onMenuClick({ key }: { key: string | number }, tab: TabConfig) {
 .tabs-chrome {
   --tab-bg-active: color-mix(in srgb, var(--primary) 15%, transparent);
   --tab-bg-hover: color-mix(in srgb, var(--primary) 8%, transparent);
-  --text-muted: rgba(0, 0, 0, 0.65);
-  --border-color: rgba(0, 0, 0, 0.08);
-}
-
-:global(html.dark) .tabs-chrome {
-  --text-muted: rgba(255, 255, 255, 0.65);
-  --border-color: rgba(255, 255, 255, 0.1);
+  --text-muted: hsl(var(--muted-foreground));
+  --border-color: hsl(var(--border));
 }
 
 /* 关键：让 Dropdown 包裹层不破坏 flex 布局，且不干扰 sortable */

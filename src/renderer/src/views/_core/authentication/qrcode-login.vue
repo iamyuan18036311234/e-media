@@ -35,12 +35,7 @@ function handleScanSim() {
         <div :key="refreshKey" class="qr-box">
           <div class="qr-mock">
             <div class="qr-grid">
-              <div
-                v-for="i in 64"
-                :key="i"
-                class="qr-cell"
-                :class="{ on: (i * 7 + refreshKey) % 3 === 0 }"
-              ></div>
+              <div v-for="i in 64" :key="i" class="qr-cell" :class="{ on: (i * 7 + refreshKey) % 3 === 0 }"></div>
             </div>
           </div>
         </div>
@@ -62,32 +57,38 @@ function handleScanSim() {
   text-align: center;
   margin-bottom: 24px;
 }
+
 .head h2 {
   font-size: 22px;
   margin-bottom: 6px;
 }
+
 .head p {
   font-size: 13px;
-  color: rgba(0, 0, 0, 0.45);
+  color: hsl(var(--muted-foreground));
 }
+
 .qr-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
 }
+
 .qr-box {
   width: 200px;
   height: 200px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid hsl(var(--border));
   border-radius: 8px;
   padding: 10px;
-  background: #fff;
+  background: hsl(var(--card));
 }
+
 .qr-mock {
   width: 100%;
   height: 100%;
 }
+
 .qr-grid {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
@@ -95,17 +96,21 @@ function handleScanSim() {
   width: 100%;
   height: 100%;
 }
+
 .qr-cell {
-  background: #f0f0f0;
+  background: hsl(var(--muted));
   border-radius: 2px;
 }
+
 .qr-cell.on {
-  background: #1a1a1a;
+  background: hsl(var(--foreground));
 }
+
 .qr-actions {
   display: flex;
   gap: 8px;
 }
+
 .back {
   text-align: center;
   margin-top: 16px;

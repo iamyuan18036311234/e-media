@@ -52,12 +52,8 @@ const appName = computed(() => preferences.app.name)
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f7f8fa;
+  background: hsl(var(--background-deep));
   overflow: hidden;
-}
-
-:global(html.dark) .auth-layout {
-  background: #0a0a0a;
 }
 
 .auth-bg {
@@ -104,15 +100,11 @@ const appName = computed(() => preferences.app.name)
   display: flex;
   width: min(960px, 92vw);
   height: min(560px, 86vh);
-  background: rgba(255, 255, 255, 0.7);
+  background: hsl(var(--card) / 0.7);
   backdrop-filter: blur(20px);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
-}
-
-:global(html.dark) .auth-container {
-  background: rgba(30, 30, 30, 0.6);
+  box-shadow: 0 20px 60px hsl(var(--overlay));
 }
 
 .auth-brand {
@@ -121,11 +113,7 @@ const appName = computed(() => preferences.app.name)
   display: flex;
   flex-direction: column;
   justify-content: center;
-  color: #1a1a1a;
-}
-
-:global(html.dark) .auth-brand {
-  color: #e5e5e5;
+  color: hsl(var(--foreground));
 }
 
 .brand-logo {
@@ -162,17 +150,13 @@ const appName = computed(() => preferences.app.name)
 .brand-desc {
   font-size: 14px;
   line-height: 1.8;
-  color: rgba(0, 0, 0, 0.55);
-}
-
-:global(html.dark) .brand-desc {
-  color: rgba(255, 255, 255, 0.55);
+  color: hsl(var(--muted-foreground));
 }
 
 .brand-footer {
   margin-top: auto;
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.35);
+  color: hsl(var(--muted-foreground));
 }
 
 .auth-panel {

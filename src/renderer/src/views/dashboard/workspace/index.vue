@@ -53,16 +53,18 @@ const todo = [
 .shortcut {
   padding: 16px;
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.02);
+  background: hsl(var(--muted));
   cursor: pointer;
   transition: all 0.2s;
   text-align: center;
 }
+
 .shortcut:hover {
   background: var(--c);
   color: #fff;
   transform: translateY(-2px);
 }
+
 .shortcut-icon {
   width: 40px;
   height: 40px;
@@ -70,44 +72,54 @@ const todo = [
   border-radius: 10px;
   background: var(--c);
 }
+
 .shortcut:hover .shortcut-icon {
-  background: rgba(255, 255, 255, 0.3);
+  background: hsl(0 0% 100% / 0.3);
 }
+
 .shortcut-title {
   font-weight: 500;
   margin-bottom: 4px;
 }
+
 .shortcut-desc {
   font-size: 12px;
   opacity: 0.7;
 }
+
 .todo-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 10px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid hsl(var(--border));
 }
+
 .todo-item:last-child {
   border-bottom: none;
 }
+
 .todo-status {
   font-size: 12px;
   padding: 2px 8px;
   border-radius: 10px;
 }
+
 .todo-status.进行中 {
   background: rgba(22, 119, 255, 0.1);
   color: #1677ff;
 }
+
 .todo-status.待处理 {
   background: rgba(250, 173, 20, 0.1);
   color: #faad14;
 }
+
 .todo-status.已完成 {
   background: rgba(82, 196, 26, 0.1);
   color: #52c41a;
 }
+
 .mock-tag {
   text-align: center;
   font-size: 12px;

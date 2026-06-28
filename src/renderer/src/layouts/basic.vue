@@ -411,13 +411,6 @@ function markAllRead() {
   --primary: v-bind('preferences.theme.colorPrimary');
   --header-h: 56px;
   --tabbar-h: 38px;
-  --sider-bg: #fff;
-  --content-bg: #f5f5f5;
-}
-
-:global(html.dark) .basic-layout {
-  --sider-bg: #1a1a1a;
-  --content-bg: #141414;
 }
 
 /* 内容最大化：隐藏侧边栏与顶栏 */
@@ -427,8 +420,8 @@ function markAllRead() {
 }
 
 .layout-sider {
-  background: var(--sider-bg) !important;
-  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.06);
+  background: hsl(var(--sidebar)) !important;
+  box-shadow: 1px 0 0 hsl(var(--border));
 }
 
 /* 自定义侧边菜单 */
@@ -454,14 +447,14 @@ function markAllRead() {
   margin: 0 8px;
   border-radius: 6px;
   font-size: 14px;
-  color: rgba(0, 0, 0, 0.75);
+  color: hsl(var(--foreground));
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;
 }
 
 .menu-title:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: hsl(var(--accent));
 }
 
 .menu-title.active {
@@ -479,7 +472,7 @@ function markAllRead() {
   transition: transform 0.2s;
   transform: rotate(0deg);
   font-size: 16px;
-  color: rgba(0, 0, 0, 0.45);
+  color: hsl(var(--muted-foreground));
 }
 
 .menu-arrow.open {
@@ -501,19 +494,19 @@ function markAllRead() {
   margin: 0 8px;
   border-radius: 6px;
   font-size: 13px;
-  color: rgba(0, 0, 0, 0.65);
+  color: hsl(var(--foreground));
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;
 }
 
 .menu-item:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: hsl(var(--accent));
 }
 
 .menu-item.selected {
   background: var(--primary);
-  color: #fff;
+  color: hsl(var(--primary-foreground));
 }
 
 /* 折叠态隐藏文字 */
@@ -527,22 +520,6 @@ function markAllRead() {
 .sider-collapsed .menu-item {
   justify-content: center;
   padding: 0;
-}
-
-:global(html.dark) .menu-title {
-  color: rgba(255, 255, 255, 0.75);
-}
-
-:global(html.dark) .menu-title:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-:global(html.dark) .menu-item {
-  color: rgba(255, 255, 255, 0.65);
-}
-
-:global(html.dark) .menu-item:hover {
-  background: rgba(255, 255, 255, 0.08);
 }
 
 /* Logo */
@@ -580,11 +557,11 @@ function markAllRead() {
   height: var(--header-h) !important;
   line-height: var(--header-h) !important;
   padding: 0 16px !important;
-  background: var(--sider-bg) !important;
+  background: hsl(var(--header)) !important;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 0 hsl(var(--border));
 }
 
 .header-left {
@@ -607,7 +584,7 @@ function markAllRead() {
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: rgba(0, 0, 0, 0.75);
+  color: hsl(var(--foreground));
   font-size: 16px;
   cursor: pointer;
   transition: all 0.2s;
@@ -615,17 +592,8 @@ function markAllRead() {
 }
 
 .header-icon-btn:hover {
-  background: rgba(0, 0, 0, 0.06);
-  color: rgba(0, 0, 0, 0.95);
-}
-
-:global(html.dark) .header-icon-btn {
-  color: rgba(255, 255, 255, 0.75);
-}
-
-:global(html.dark) .header-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.95);
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
 }
 
 .header-breadcrumb {
@@ -660,14 +628,14 @@ function markAllRead() {
   padding: 0 12px;
   border-radius: 6px;
   font-size: 14px;
-  color: rgba(0, 0, 0, 0.75);
+  color: hsl(var(--foreground));
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;
 }
 
 .top-menu-title:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: hsl(var(--accent));
 }
 
 .top-menu-title.active {
@@ -680,9 +648,9 @@ function markAllRead() {
   top: 100%;
   left: 0;
   min-width: 160px;
-  background: var(--sider-bg);
+  background: hsl(var(--popover));
   border-radius: 8px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 16px hsl(var(--overlay));
   padding: 4px;
   margin: 4px 0 0;
   z-index: 100;
@@ -696,7 +664,7 @@ function markAllRead() {
   padding: 0 12px;
   border-radius: 6px;
   font-size: 13px;
-  color: rgba(0, 0, 0, 0.65);
+  color: hsl(var(--foreground));
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;
@@ -704,22 +672,12 @@ function markAllRead() {
 }
 
 .top-menu-item:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: hsl(var(--accent));
 }
 
 .top-menu-item.selected {
   background: var(--primary);
-  color: #fff;
-}
-
-:global(html.dark) .top-menu-title,
-:global(html.dark) .top-menu-item {
-  color: rgba(255, 255, 255, 0.75);
-}
-
-:global(html.dark) .top-menu-title:hover,
-:global(html.dark) .top-menu-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+  color: hsl(var(--primary-foreground));
 }
 
 .header-right {
@@ -740,7 +698,7 @@ function markAllRead() {
 }
 
 .user-trigger:hover {
-  background: rgba(0, 0, 0, 0.04);
+  background: hsl(var(--accent));
 }
 
 .user-name {
@@ -751,9 +709,9 @@ function markAllRead() {
 /* 通知面板 */
 .notif-panel {
   width: 320px;
-  background: var(--sider-bg);
+  background: hsl(var(--popover));
   border-radius: 8px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 16px hsl(var(--overlay));
   overflow: hidden;
 }
 
@@ -762,7 +720,7 @@ function markAllRead() {
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid hsl(var(--border));
   font-weight: 600;
 }
 
@@ -773,12 +731,12 @@ function markAllRead() {
 
 .notif-item {
   padding: 10px 14px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid hsl(var(--border));
   cursor: pointer;
 }
 
 .notif-item.unread {
-  background: rgba(22, 119, 255, 0.04);
+  background: hsl(var(--primary) / 0.08);
 }
 
 .notif-title {
@@ -788,13 +746,13 @@ function markAllRead() {
 
 .notif-desc {
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.45);
+  color: hsl(var(--muted-foreground));
   margin-top: 2px;
 }
 
 .notif-time {
   font-size: 11px;
-  color: rgba(0, 0, 0, 0.35);
+  color: hsl(var(--muted-foreground));
   margin-top: 4px;
 }
 
@@ -802,8 +760,8 @@ function markAllRead() {
 .tabbar {
   --primary: v-bind('preferences.theme.colorPrimary');
   height: var(--tabbar-h);
-  background: var(--sider-bg);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: hsl(var(--header));
+  border-bottom: 1px solid hsl(var(--border));
   display: flex;
   align-items: stretch;
   padding: 0;
@@ -812,20 +770,12 @@ function markAllRead() {
 
 .tabbar-tools {
   flex-shrink: 0;
-  border-left: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-:global(html.dark) .tabbar {
-  border-bottom-color: rgba(255, 255, 255, 0.08);
-}
-
-:global(html.dark) .tabbar-tools {
-  border-left-color: rgba(255, 255, 255, 0.08);
+  border-left: 1px solid hsl(var(--border));
 }
 
 /* Content */
 .layout-content {
-  background: var(--content-bg) !important;
+  background: hsl(var(--background-deep)) !important;
   overflow: auto;
   padding: 14px;
 }

@@ -1,0 +1,188 @@
+/* 设计令牌 - 对齐 web-antd 的 design-tokens/default.css 和 dark.css
+ * 通过 :root / .light 定义亮色变量，.dark 定义暗色变量
+ * html 标签上的 .dark 类切换会触发整套变量切换
+ */
+
+:root {
+  /* Default background color of <body />...etc */
+  --background: 0 0% 100%;
+
+  /* 主体区域背景色 */
+  --background-deep: 216 20.11% 95.47%;
+  --foreground: 210 6% 21%;
+
+  /* Background color for <Card /> */
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+
+  /* Background color for popovers */
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+
+  /* Muted backgrounds */
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+
+  /* 主题颜色 */
+  --primary: 212 100% 45%;
+  --primary-foreground: 0 0% 98%;
+
+  /* Destructive */
+  --destructive: 359.33 100% 65.1%;
+  --destructive-foreground: 0 0% 98%;
+
+  /* Info */
+  --info: 240, 5%, 96%;
+  --info-foreground: 220, 4%, 58%;
+
+  /* Success */
+  --success: 144 57% 58%;
+  --success-foreground: 0 0% 98%;
+
+  /* Warning */
+  --warning: 42 84% 61%;
+  --warning-foreground: 0 0% 98%;
+
+  /* Secondary */
+  --secondary: 240 5% 96%;
+  --secondary-foreground: 240 6% 10%;
+
+  /* Accent */
+  --accent: 240 5% 96%;
+  --accent-dark: 216 14% 93%;
+  --accent-darker: 216 11% 91%;
+  --accent-lighter: 240 0% 98%;
+  --accent-hover: 200deg 10% 90%;
+  --accent-foreground: 240 6% 10%;
+
+  /* Heavy */
+  --heavy: 192deg 9.43% 89.61%;
+  --heavy-foreground: var(--accent-foreground);
+
+  /* Border */
+  --border: 240 5.9% 90%;
+
+  /* Input */
+  --input: 240deg 5.88% 90%;
+  --input-placeholder: 217 10.6% 65%;
+  --input-background: 0 0% 100%;
+
+  /* Ring */
+  --ring: 222.2 84% 4.9%;
+
+  /* Radius */
+  --radius: 0.5rem;
+
+  /* ============= custom ============= */
+
+  /* 遮罩颜色 */
+  --overlay: 0 0% 0% / 45%;
+  --overlay-content: 0 0% 95% / 45%;
+
+  /* 基本文字大小 */
+  --font-size-base: 16px;
+  --menu-font-size: calc(var(--font-size-base) * 0.875);
+
+  /* ============= component & UI ============= */
+
+  /* menu / sidebar */
+  --sidebar: 0 0% 100%;
+  --sidebar-deep: 0 0% 100%;
+  --menu: var(--sidebar);
+
+  /* header */
+  --header: 0 0% 100%;
+
+  accent-color: var(--primary);
+  color-scheme: light;
+}
+
+.dark,
+.dark[data-theme='custom'],
+.dark[data-theme='default'] {
+  /* Default background color of <body />...etc */
+  --background: 222.34deg 10.43% 12.27%;
+
+  /* 主体区域背景色 */
+  --background-deep: 220deg 13.06% 9%;
+  --foreground: 0 0% 95%;
+
+  /* Background color for <Card /> */
+  --card: 222.34deg 10.43% 12.27%;
+  --card-foreground: 210 40% 98%;
+
+  /* Background color for popovers */
+  --popover: 0 0% 14.2%;
+  --popover-foreground: 210 40% 98%;
+
+  /* Muted backgrounds */
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+
+  /* 主题颜色 */
+  --primary-foreground: 0 0% 98%;
+
+  /* Destructive */
+  --destructive: 359.21 68.47% 56.47%;
+  --destructive-foreground: 0 0% 98%;
+
+  /* Info */
+  --info: 180, 1.54%, 12.75%;
+  --info-foreground: 220, 4%, 58%;
+
+  /* Success */
+  --success: 144 57% 58%;
+  --success-foreground: 0 0% 98%;
+
+  /* Warning */
+  --warning: 42 84% 61%;
+  --warning-foreground: 0 0% 98%;
+
+  /* Secondary */
+  --secondary: 240 5% 17%;
+  --secondary-foreground: 0 0% 98%;
+
+  /* Accent */
+  --accent: 216 5% 19%;
+  --accent-dark: 240 0% 22%;
+  --accent-darker: 240 0% 26%;
+  --accent-lighter: 216 5% 12%;
+  --accent-hover: 216 5% 24%;
+  --accent-foreground: 0 0% 98%;
+
+  /* Heavy */
+  --heavy: 216 5% 24%;
+  --heavy-foreground: var(--accent-foreground);
+
+  /* Border */
+  --border: 240 3.7% 22%;
+
+  /* Input */
+  --input: 0deg 0% 100% / 10%;
+  --input-placeholder: 218deg 11% 65%;
+  --input-background: 0deg 0% 100% / 5%;
+
+  /* Ring */
+  --ring: 222.2 84% 4.9%;
+
+  /* Radius */
+  --radius: 0.5rem;
+
+  /* ============= custom ============= */
+
+  /* 遮罩颜色 */
+  --overlay: 0deg 0% 0% / 40%;
+  --overlay-content: 0deg 0% 0% / 40%;
+
+  /* ============= component & UI ============= */
+
+  /* menu / sidebar */
+  --sidebar: 222.34deg 10.43% 12.27%;
+  --sidebar-deep: 220deg 13.06% 9%;
+  --menu: var(--sidebar);
+
+  /* header */
+  --header: 222.34deg 10.43% 12.27%;
+
+  color-scheme: dark;
+}

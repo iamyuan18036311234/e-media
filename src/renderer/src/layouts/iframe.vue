@@ -17,12 +17,13 @@ const src = (route.meta?.link as string) || (route.meta?.iframeSrc as string)
 <style scoped>
 .iframe-view {
   display: flex;
+  background: hsl(var(--background-deep));
 }
 
 .iframe {
   flex: 1;
   border: none;
-  background: #fff;
+  background: hsl(var(--card));
   border-radius: 8px;
 }
 
@@ -31,6 +32,6 @@ const src = (route.meta?.link as string) || (route.meta?.iframeSrc as string)
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(0, 0, 0, 0.4);
+  color: hsl(var(--muted-foreground));
 }
 </style>

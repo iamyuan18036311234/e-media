@@ -71,19 +71,18 @@ async function handleLogin() {
 
     <Form ref="formRef" :model="form" :rules="rules" layout="vertical">
       <FormItem name="username">
-        <Input
-          v-model:value="form.username"
-          size="large"
-          :placeholder="$t('page.auth.login')"
-          allow-clear
-        >
-          <template #prefix><UserOutlined /></template>
+        <Input v-model:value="form.username" size="large" :placeholder="$t('page.auth.login')" allow-clear>
+          <template #prefix>
+            <UserOutlined />
+          </template>
         </Input>
       </FormItem>
 
       <FormItem name="password">
         <InputPassword v-model:value="form.password" size="large" placeholder="密码" allow-clear>
-          <template #prefix><LockOutlined /></template>
+          <template #prefix>
+            <LockOutlined />
+          </template>
         </InputPassword>
       </FormItem>
 
@@ -139,7 +138,7 @@ async function handleLogin() {
 
 .login-sub {
   font-size: 13px;
-  color: rgba(0, 0, 0, 0.45);
+  color: hsl(var(--muted-foreground));
 }
 
 .login-options {
@@ -159,7 +158,7 @@ async function handleLogin() {
   text-align: center;
   font-size: 13px;
   margin-top: 20px;
-  color: rgba(0, 0, 0, 0.45);
+  color: hsl(var(--muted-foreground));
 }
 
 .login-mock-tip {

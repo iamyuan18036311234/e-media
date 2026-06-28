@@ -117,12 +117,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Popover
-    v-model:open="open"
-    trigger="click"
-    placement="bottomRight"
-    overlay-class-name="updater-popover"
-  >
+  <Popover v-model:open="open" trigger="click" placement="bottomRight" overlay-class-name="updater-popover">
     <template #title>
       <div class="updater-popover-title">
         <span>检查更新</span>
@@ -193,24 +188,15 @@ onUnmounted(() => {
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: rgba(0, 0, 0, 0.75);
+  color: hsl(var(--foreground));
   font-size: 16px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .header-icon-btn:hover {
-  background: rgba(0, 0, 0, 0.06);
-  color: rgba(0, 0, 0, 0.95);
-}
-
-:global(html.dark) .header-icon-btn {
-  color: rgba(255, 255, 255, 0.75);
-}
-
-:global(html.dark) .header-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.95);
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
 }
 
 /* Popover 标题 */
@@ -232,14 +218,14 @@ onUnmounted(() => {
 }
 
 .updater-error {
-  color: #ff4d4f;
+  color: hsl(var(--destructive));
   font-size: 13px;
   margin: 0 0 8px;
 }
 
 .updater-tip {
   font-size: 13px;
-  color: rgba(0, 0, 0, 0.55);
+  color: hsl(var(--muted-foreground));
   margin: 0 0 8px;
 }
 
@@ -277,7 +263,7 @@ onUnmounted(() => {
 .updater-changelog {
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid hsl(var(--border));
 }
 
 .updater-changelog-title {
@@ -288,19 +274,10 @@ onUnmounted(() => {
 
 .updater-changelog-body {
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.55);
+  color: hsl(var(--muted-foreground));
   white-space: pre-wrap;
   max-height: 120px;
   overflow-y: auto;
   line-height: 1.5;
-}
-
-:global(html.dark) .updater-tip,
-:global(html.dark) .updater-changelog-body {
-  color: rgba(255, 255, 255, 0.55);
-}
-
-:global(html.dark) .updater-changelog {
-  border-top-color: rgba(255, 255, 255, 0.1);
 }
 </style>

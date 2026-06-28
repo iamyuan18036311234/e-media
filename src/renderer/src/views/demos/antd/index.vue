@@ -40,14 +40,10 @@ function confirm(): void {
       <div class="row">
         <span>输入：</span>
         <Input placeholder="文本框" style="width: 200px" />
-        <Select
-          style="width: 160px"
-          placeholder="下拉"
-          :options="[
-            { label: '选项1', value: '1' },
-            { label: '选项2', value: '2' }
-          ]"
-        />
+        <Select style="width: 160px" placeholder="下拉" :options="[
+          { label: '选项1', value: '1' },
+          { label: '选项2', value: '2' }
+        ]" />
         <DatePicker placeholder="日期" />
         <Switch checked-children="开" un-checked-children="关" />
       </div>
@@ -88,11 +84,13 @@ function confirm(): void {
   margin-bottom: 12px;
   flex-wrap: wrap;
 }
-.row > span:first-child {
+
+.row>span:first-child {
   width: 60px;
-  color: rgba(0, 0, 0, 0.55);
+  color: hsl(var(--muted-foreground));
   font-size: 13px;
 }
+
 .mock-tag {
   text-align: center;
   font-size: 12px;

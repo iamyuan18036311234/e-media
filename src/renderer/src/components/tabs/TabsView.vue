@@ -224,35 +224,19 @@ onUnmounted(() => {
 }
 
 .tabs-scroll-container:hover::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-color, rgba(0, 0, 0, 0.2));
-}
-
-:global(html.dark) .tabs-scroll-container:hover::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--scrollbar-color, hsl(var(--border)));
 }
 
 .text-muted-foreground {
-  color: rgba(0, 0, 0, 0.45);
-}
-
-:global(html.dark) .text-muted-foreground {
-  color: rgba(255, 255, 255, 0.45);
+  color: hsl(var(--muted-foreground));
 }
 
 .border-border {
-  border-color: rgba(0, 0, 0, 0.08);
-}
-
-:global(html.dark) .border-border {
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: hsl(var(--border));
 }
 
 .hover\:bg-muted:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-
-:global(html.dark) .hover\:bg-muted:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: hsl(var(--accent));
 }
 
 .pt-0\.75 {

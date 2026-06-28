@@ -80,7 +80,7 @@ async function handleSubmit() {
 }
 .head p {
   font-size: 13px;
-  color: rgba(0, 0, 0, 0.45);
+  color: hsl(var(--muted-foreground));
 }
 .back {
   text-align: center;

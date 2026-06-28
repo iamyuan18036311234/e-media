@@ -101,7 +101,7 @@ const dataSource = [
   color: #ff4d4f;
 }
 .delta .vs {
-  color: rgba(0, 0, 0, 0.4);
+  color: hsl(var(--muted-foreground));
   margin-left: 4px;
 }
 .mock-tag {

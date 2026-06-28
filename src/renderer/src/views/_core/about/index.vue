@@ -38,7 +38,7 @@ const stack = [
 
 .intro {
   margin-bottom: 20px;
-  color: rgba(0, 0, 0, 0.65);
+  color: hsl(var(--foreground));
   line-height: 1.8;
 }
 
@@ -53,12 +53,12 @@ const stack = [
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  background: rgba(0, 0, 0, 0.02);
+  background: hsl(var(--muted));
   border-radius: 6px;
 }
 
 .stack-label {
-  color: rgba(0, 0, 0, 0.55);
+  color: hsl(var(--muted-foreground));
   font-size: 13px;
 }
 </style>

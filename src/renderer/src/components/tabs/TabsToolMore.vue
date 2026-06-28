@@ -41,17 +41,10 @@ function onClick({ key }: { key: string | number }) {
 
 <style scoped>
 .tabs-tool {
-  --text-muted: rgba(0, 0, 0, 0.45);
-  --text-foreground: rgba(0, 0, 0, 0.85);
-  --bg-muted: rgba(0, 0, 0, 0.04);
-  --border: rgba(0, 0, 0, 0.08);
-}
-
-:global(html.dark) .tabs-tool {
-  --text-muted: rgba(255, 255, 255, 0.45);
-  --text-foreground: rgba(255, 255, 255, 0.85);
-  --bg-muted: rgba(255, 255, 255, 0.06);
-  --border: rgba(255, 255, 255, 0.1);
+  --text-muted: hsl(var(--muted-foreground));
+  --text-foreground: hsl(var(--foreground));
+  --bg-muted: hsl(var(--accent));
+  --border: hsl(var(--border));
 }
 
 .text-muted-foreground {
