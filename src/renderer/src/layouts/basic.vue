@@ -56,9 +56,73 @@ const { accessMenus } = storeToRefs(accessStore)
 /** 用户信息（安全访问，避免 null 报错） */
 const userInfo = computed(() => userStore.userInfo)
 
-/** 布局模式（对齐 web-antd LayoutType） */
-const isTopNav = computed(() => preferences.app.layout === 'header-nav')
-const isSideNav = computed(() => !isTopNav.value)
+/** 布局模式（对齐 web-antd LayoutType，完整 7 种布局） */
+const layout = computed(() => preferences.app.layout)
+const isFullContent = computed(() => layout.value === 'full-content')
+const isHeaderNav = computed(() => layout.value === 'header-nav')
+const isSideNav = computed(() => layout.value === 'sidebar-nav')
+const isSideMixedNav = computed(() => layout.value === 'sidebar-mixed-nav')
+const isHeaderSidebarNav = computed(() => layout.value === 'header-sidebar-nav')
+const isMixedNav = computed(() => layout.value === 'mixed-nav')
+const isHeaderMixedNav = computed(() => layout.value === 'header-mixed-nav')
+
+/** 兼容旧代码 */
+const isTopNav = isHeaderNav
+
+/** 是否显示侧边栏（full-content 和 header-nav 不显示） */
+const showSider = computed(
+  () => !isFullContent.value && !isHeaderNav.value && preferences.sidebar.enable
+)
+
+/** 是否双列侧边栏（sidebar-mixed-nav / header-mixed-nav） */
+const isDoubleSider = computed(() => isSideMixedNav.value || isHeaderMixedNav.value)
+
+/** 顶部是否显示菜单（header-nav / header-sidebar-nav / mixed-nav / header-mixed-nav） */
+const showHeaderMenu = computed(
+  () =>
+    isHeaderNav.value ||
+    isHeaderSidebarNav.value ||
+    isMixedNav.value ||
+    isHeaderMixedNav.value
+)
+
+/** 顶部是否显示完整嵌套菜单（仅 header-nav），其余只显示一级菜单 */
+const isFullHeaderMenu = computed(() => isHeaderNav.value)
+
+/** 侧边栏是否显示完整嵌套菜单（仅 sidebar-nav），其余只显示子菜单 */
+const isFullSiderMenu = computed(() => isSideNav.value)
+
+/** 一级菜单（root，用于双列侧边栏左列和顶部一级菜单） */
+const rootMenus = computed(() =>
+  accessMenus.value.filter((m) => !m.hideInMenu)
+)
+
+/** 当前选中的一级菜单（根据路由匹配） */
+const activeRootMenu = computed(() => {
+  const current = rootMenus.value.find(
+    (m) => route.path === m.path || route.path.startsWith(m.path + '/')
+  )
+  return current || rootMenus.value[0]
+})
+
+/** 选中一级菜单的子菜单 */
+const activeSubMenus = computed(() => filterChildren(activeRootMenu.value?.children))
+
+/** 一级菜单选中 key（用于双列左列高亮） */
+const activeRootKeys = computed(() =>
+  activeRootMenu.value ? [activeRootMenu.value.path] : []
+)
+
+/** 点击一级菜单 → 导航到其首页或第一个子项 */
+function onRootMenuClick(path: string) {
+  const menu = rootMenus.value.find((m) => m.path === path)
+  if (!menu) return
+  const children = filterChildren(menu.children)
+  const target = children.length > 0 ? children[0].path : menu.path
+  if (target && target !== route.path) {
+    router.push(target)
+  }
+}
 
 /** 侧边栏折叠 */
 const collapsed = computed({
@@ -240,8 +304,43 @@ function openPreferences() {
 
 <template>
   <Layout class="basic-layout h-screen w-screen overflow-hidden" :class="{ 'is-content-maximize': contentIsMaximize }">
-    <!-- 侧边栏（side-nav / mixed-nav 模式） -->
-    <LayoutSider v-if="isSideNav && preferences.sidebar.enable" v-model:collapsed="collapsed"
+    <!-- ==================== 双列侧边栏（sidebar-mixed-nav / header-mixed-nav） ==================== -->
+    <template v-if="isDoubleSider && showSider">
+      <!-- 第一列：一级菜单（窄列，只图标+短文字） -->
+      <LayoutSider :width="80" :collapsed-width="64" :trigger="null" collapsible :collapsed="true"
+        class="layout-sider-slim">
+        <div v-if="preferences.logo.enable" class="logo-wrap logo-wrap--mini">
+          <div class="logo-badge">流</div>
+        </div>
+        <ul class="side-menu-slim">
+          <li v-for="menu in rootMenus" :key="menu.path" class="menu-slim-item"
+            :class="{ selected: activeRootKeys.includes(menu.path) }" :title="menu.title || menu.name"
+            @click="onRootMenuClick(menu.path)">
+            <Icon v-if="menu.icon" :icon="menu.icon" :size="18" />
+            <span class="menu-slim-text">{{ menu.title || menu.name }}</span>
+          </li>
+        </ul>
+      </LayoutSider>
+      <!-- 第二列：子菜单 -->
+      <LayoutSider v-model:collapsed="collapsed" :width="preferences.sidebar.width"
+        :collapsed-width="preferences.sidebar.collapseWidth" :trigger="null" collapsible class="layout-sider layout-sider-sub"
+        :class="{ 'sider-collapsed': collapsed }">
+        <div class="sub-sider-title">
+          <span v-show="!collapsed">{{ activeRootMenu?.title || activeRootMenu?.name || '菜单' }}</span>
+        </div>
+        <ul class="side-menu-custom">
+          <li v-for="child in activeSubMenus" :key="child.path" class="menu-item"
+            :class="{ selected: selectedKeys.includes(child.path) }" @click="onMenuClick({ key: child.path })">
+            <Icon v-if="child.icon" :icon="child.icon" :size="14" />
+            <span class="menu-text">{{ child.title || child.name }}</span>
+          </li>
+          <li v-if="activeSubMenus.length === 0" class="menu-empty">暂无子菜单</li>
+        </ul>
+      </LayoutSider>
+    </template>
+
+    <!-- ==================== 单列侧边栏（sidebar-nav / header-sidebar-nav / mixed-nav） ==================== -->
+    <LayoutSider v-else-if="showSider" v-model:collapsed="collapsed"
       :width="preferences.sidebar.width" :collapsed-width="preferences.sidebar.collapseWidth" :trigger="null"
       collapsible class="layout-sider" :class="{ 'sider-collapsed': collapsed }">
       <!-- Logo -->
@@ -250,8 +349,8 @@ function openPreferences() {
         <span v-show="!collapsed" class="logo-text">流光视频</span>
       </div>
 
-      <!-- 自定义侧边菜单（避免 antd Menu 的 useInjectMenu 上下文断链问题） -->
-      <ul class="side-menu-custom">
+      <!-- sidebar-nav: 完整嵌套菜单 -->
+      <ul v-if="isFullSiderMenu" class="side-menu-custom">
         <template v-for="menu in filteredMenus" :key="menu.path">
           <!-- 有子菜单 -->
           <li v-if="filterChildren(menu.children).length" class="menu-group">
@@ -276,13 +375,24 @@ function openPreferences() {
           </li>
         </template>
       </ul>
+
+      <!-- header-sidebar-nav / mixed-nav: 只显示当前一级菜单的子菜单 -->
+      <ul v-else class="side-menu-custom">
+        <li v-for="child in activeSubMenus" :key="child.path" class="menu-item"
+          :class="{ selected: selectedKeys.includes(child.path) }" @click="onMenuClick({ key: child.path })">
+          <Icon v-if="child.icon" :icon="child.icon" :size="14" />
+          <span class="menu-text">{{ child.title || child.name }}</span>
+        </li>
+        <li v-if="activeSubMenus.length === 0" class="menu-empty">暂无子菜单</li>
+      </ul>
     </LayoutSider>
 
     <Layout class="layout-main">
       <!-- 顶部 -->
       <LayoutHeader class="layout-header">
         <div class="header-left">
-          <Tooltip :title="collapsed ? '展开侧边栏' : '折叠侧边栏'" placement="bottom">
+          <!-- 折叠按钮（只有有侧边栏时显示） -->
+          <Tooltip v-if="showSider" :title="collapsed ? '展开侧边栏' : '折叠侧边栏'" placement="bottom">
             <button class="header-icon-btn" type="button" aria-label="切换侧边栏" @click="toggleCollapse">
               <component :is="collapsed ? MenuUnfoldOutlined : MenuFoldOutlined" />
             </button>
@@ -294,14 +404,15 @@ function openPreferences() {
             </button>
           </Tooltip>
 
-          <Breadcrumb v-if="preferences.breadcrumb.enable && !isMobile" class="header-breadcrumb">
+          <Breadcrumb v-if="preferences.breadcrumb.enable && !isMobile && !showHeaderMenu" class="header-breadcrumb">
             <BreadcrumbItem v-for="(b, i) in breadcrumbItems" :key="i">
               {{ b.title }}
             </BreadcrumbItem>
           </Breadcrumb>
 
-          <!-- 顶部导航菜单（top-nav 模式，自定义实现） -->
-          <ul v-if="isTopNav" class="top-menu-custom">
+          <!-- ==================== 顶部菜单 ==================== -->
+          <!-- header-nav: 完整嵌套菜单 -->
+          <ul v-if="showHeaderMenu && isFullHeaderMenu" class="top-menu-custom">
             <template v-for="menu in filteredMenus" :key="menu.path">
               <li v-if="filterChildren(menu.children).length" class="top-menu-group">
                 <div class="top-menu-title" :class="{ active: openKeys.includes(menu.path) }"
@@ -323,6 +434,15 @@ function openPreferences() {
                 <span>{{ menu.title || menu.name }}</span>
               </li>
             </template>
+          </ul>
+
+          <!-- header-sidebar-nav / mixed-nav / header-mixed-nav: 只显示一级菜单 -->
+          <ul v-else-if="showHeaderMenu" class="top-menu-custom top-menu-root">
+            <li v-for="menu in rootMenus" :key="menu.path" class="top-menu-item"
+              :class="{ selected: activeRootKeys.includes(menu.path) }" @click="onRootMenuClick(menu.path)">
+              <Icon v-if="menu.icon" :icon="menu.icon" :size="16" />
+              <span>{{ menu.title || menu.name }}</span>
+            </li>
           </ul>
         </div>
 
@@ -440,6 +560,87 @@ function openPreferences() {
 .layout-sider {
   background: hsl(var(--sidebar)) !important;
   box-shadow: 1px 0 0 hsl(var(--border));
+}
+
+/* 双列侧边栏 - 第一列窄列 */
+.layout-sider-slim {
+  background: hsl(var(--sidebar)) !important;
+  box-shadow: 1px 0 0 hsl(var(--border));
+  flex-shrink: 0;
+}
+
+.logo-wrap--mini {
+  justify-content: center;
+  padding: 0 !important;
+}
+
+.side-menu-slim {
+  list-style: none;
+  padding: 8px 0;
+  margin: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.menu-slim-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 4px;
+  margin: 2px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+  color: hsl(var(--foreground));
+}
+
+.menu-slim-item:hover {
+  background: hsl(var(--accent));
+}
+
+.menu-slim-item.selected {
+  background: var(--primary);
+  color: hsl(var(--primary-foreground));
+}
+
+.menu-slim-text {
+  font-size: 11px;
+  text-align: center;
+  line-height: 1.2;
+  word-break: break-all;
+  max-width: 64px;
+}
+
+/* 双列侧边栏 - 第二列子菜单标题 */
+.layout-sider-sub {
+  border-left: 1px solid hsl(var(--border));
+}
+
+.sub-sider-title {
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  border-bottom: 1px solid hsl(var(--border));
+  white-space: nowrap;
+}
+
+.menu-empty {
+  padding: 20px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+}
+
+/* 顶部一级菜单（横向排列） */
+.top-menu-root {
+  gap: 4px;
 }
 
 /* 自定义侧边菜单 */
